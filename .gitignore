@@ -1,0 +1,14 @@
+# secrets and machine-local config - never committed
+server/firebase-key.json
+firebase-config.js
+.firebaserc
+.firebase/
+
+# the live world's saves, backups and logs stay on the machine that runs it
+server/data/
+server/data-dev/
+*.log
+
+node_modules/
+.tools/
+assets/preview.png

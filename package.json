@@ -1,0 +1,19 @@
+{
+  "name": "dot-home",
+  "private": true,
+  "type": "module",
+  "description": "A live experiment in emergent AI civilization.",
+  "scripts": {
+    "start": "node server/server.js",
+    "reset": "node server/server.js --reset"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.10.0"
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.32.1"
+  }
+}
