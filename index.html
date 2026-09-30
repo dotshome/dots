@@ -1,0 +1,1892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#5fb2f5">
+<meta name="apple-mobile-web-app-title" content="dot.home">
+<title>dot.home</title>
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1c1f2e;
+    --muted: #6a7088;
+    --card: rgba(255, 255, 255, .9);
+    --line: rgba(28, 31, 46, .08);
+    --accent: #4f6bff;
+    --ok: #22a45a;
+    --bad: #e5484d;
+    --warn: #e3a008;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #cdeafe; font-family: Nunito, system-ui, sans-serif; color: var(--ink); -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  button { touch-action: manipulation; }
+  body.lineup { background: #f1e5d8; }
+  #app { position: fixed; inset: 0; }
+  #app canvas { display: block; }
+  .labels { position: absolute; inset: 0; pointer-events: none; }
+  #fade { position: fixed; inset: 0; background: #0b0b10; opacity: 0; pointer-events: none; transition: opacity .28s; z-index: 20; }
+  #fade.on { opacity: 1; }
+  #loading { position: fixed; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 15px; color: var(--muted); }
+  #loading ~ #left, #loading ~ #res { visibility: hidden; } /* no empty cards while the world loads */
+  button { font-family: inherit; color: inherit; }
+  code, pre { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  .muted { color: var(--muted); }
+  .small { font-size: 11.5px; }
+  .pad { padding: 0 6px; }
+  .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--c); margin-right: 5px; vertical-align: 0; flex: none; }
+
+  .card { background: var(--card); border-radius: 16px; box-shadow: 0 8px 28px rgba(20, 30, 70, .13), 0 0 0 1px var(--line); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .seg { display: flex; gap: 2px; padding: 3px; border-radius: 11px; background: var(--line); }
+  .seg button { border: 0; background: transparent; border-radius: 8px; padding: 5px 9px; font-weight: 900; font-size: 12px; cursor: pointer; color: var(--muted); }
+  .seg button.on { background: var(--ink); color: #fff; }
+
+  /* top bar */
+  #top { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; padding: 6px; border-radius: 20px; white-space: nowrap; z-index: 5; }
+  .brand { display: flex; align-items: center; gap: 9px; }
+  .brand .logo { width: 34px; height: 34px; border-radius: 50%; display: block; flex: none; box-shadow: 0 0 0 2px #fff, 0 2px 8px rgba(30, 70, 160, .28); }
+  .brand .bt { display: flex; align-items: center; gap: 10px; }
+  .brand b { font-size: 18px; letter-spacing: -.3px; }
+  .live { font-size: 10px; font-weight: 900; letter-spacing: .8px; color: var(--bad); display: inline-flex; align-items: center; gap: 4px; }
+  .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); animation: pulse 1.6s infinite; }
+  .live.off { color: var(--muted); }
+  .live.off::before { background: var(--muted); animation: none; }
+  .watch { font-size: 11px; font-weight: 900; color: var(--muted); }
+  .watch b { color: var(--ink); font-size: 13px; }
+  .watch:empty { display: none; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  /* island time: a little chip tinted like the sky, with a drawn sun / moon instead of an emoji */
+  .clock { display: flex; align-items: center; gap: 7px; padding: 6px 12px 6px 9px; border-radius: 13px; background: #e8f2ff; font-weight: 900; transition: background .8s; }
+  .clock[data-phase="dawn"], .clock[data-phase="dusk"] { background: #ffeadb; }
+  .clock[data-phase="night"] { background: #e7e8f8; }
+  .clock .sky { width: 20px; height: 20px; flex: none; }
+  .clock b { font-size: 14.5px; }
+  .clock span { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; color: var(--muted); }
+  .pop { font-size: 11px; font-weight: 900; letter-spacing: .6px; color: var(--muted); }
+  .pop b { color: var(--ink); font-size: 14px; }
+  #speed { display: none; } /* the world runs at one pace for everyone; ?dev shows controls for building */
+  body.dev #speed { display: flex; }
+
+  /* left column */
+  #left { position: fixed; top: 72px; left: 14px; bottom: 70px; width: 300px; display: flex; flex-direction: column; gap: 10px; z-index: 4; }
+  #left .card { padding: 12px 14px; }
+  #left h3 { margin: 0 0 6px; font-size: 10.5px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #evText { margin: 0 0 6px; font-size: 14px; font-weight: 900; line-height: 1.3; }
+  #evMeta b.ms { color: #b7791f; }
+  #decision .q { margin: 0 0 6px; font-size: 13.5px; font-weight: 800; line-height: 1.35; }
+  #decision .muted.small b.passed { color: var(--ok); }
+  #decision .muted.small b.failed { color: var(--bad); }
+  .tag-num { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted); }
+  .votes { display: grid; gap: 3px; margin-top: 4px; }
+  .vote { display: flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 800; padding: 3px 6px; border-radius: 8px; cursor: pointer; }
+  .vote:hover { background: var(--line); }
+  .vote span { flex: 1; }
+  .st { font-size: 10px; letter-spacing: .6px; padding: 2px 7px; border-radius: 99px; background: var(--line); color: var(--muted); }
+  .st.support { background: #d9f7e4; color: #137a3f; }
+  .st.oppose { background: #ffe1e1; color: #b42324; }
+  .st.undecided { background: #fff1c7; color: #8a6000; }
+  .mini-trace { margin-top: 6px; font-size: 12px; font-weight: 800; padding: 8px; border-radius: 10px; background: var(--line); cursor: pointer; }
+  .mini-trace code { font-size: 11px; }
+  .mini-trace p { margin: 4px 0 0; font-weight: 700; color: var(--muted); }
+  #feedCard { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #feedTabs { margin-bottom: 6px; }
+  #feedTabs button { font-size: 11px; }
+  #feed { flex: 1; overflow: auto; display: flex; flex-direction: column; gap: 5px; }
+  .line { display: flex; gap: 2px; font-size: 12.5px; font-weight: 700; line-height: 1.35; }
+  .line .dot { margin-top: 5px; }
+  .line.eng { font-size: 11px; gap: 6px; font-family: 'JetBrains Mono', monospace; font-weight: 500; color: var(--muted); }
+  .line.eng code { color: var(--ink); opacity: .55; }
+  .line.eng.bad span { color: var(--bad); font-weight: 700; }
+
+  /* right rail */
+  #rail { position: fixed; top: 72px; right: 14px; bottom: 70px; width: 340px; display: flex; flex-direction: column; z-index: 4; overflow: hidden; }
+  #tabs { display: flex; gap: 2px; padding: 6px; border-bottom: 1px solid var(--line); }
+  #tabs button { flex: 1; border: 0; background: transparent; border-radius: 8px; padding: 6px 2px; font-weight: 900; font-size: 11.5px; color: var(--muted); cursor: pointer; }
+  #tabs button.on { background: var(--ink); color: #fff; }
+  #panel { flex: 1; overflow: auto; padding: 8px; }
+  #panel h4 { margin: 12px 0 5px; font-size: 10.5px; font-weight: 900; letter-spacing: .9px; text-transform: uppercase; color: var(--muted); display: flex; gap: 6px; align-items: baseline; }
+  #panel p { margin: 4px 0; font-size: 12.5px; font-weight: 700; line-height: 1.4; }
+  .who { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; padding: 9px 8px; border-radius: 12px; cursor: pointer; }
+  .who:hover { background: var(--line); }
+  .who b { font-size: 14px; }
+  .sw { display: block; width: 34px; height: 34px; border-radius: 50%; background: var(--c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .14); }
+  .sw.big { width: 40px; height: 40px; }
+  .chip { font-size: 10px; font-weight: 900; padding: 1px 7px; border-radius: 99px; background: #eef0ff; color: #3949c7; vertical-align: 1px; }
+  .needs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 5px; }
+  .bar { display: block; height: 6px; border-radius: 99px; background: var(--line); overflow: hidden; flex: 1; }
+  .bar > span { display: block; height: 100%; border-radius: 99px; transition: width .4s; }
+  .detail .dhead { display: flex; gap: 10px; align-items: center; padding: 4px; }
+  .detail .dhead > div { flex: 1; }
+  .detail .dn { font-size: 18px; }
+  .detail .dhead button { border: 0; background: var(--line); border-radius: 9px; width: 28px; height: 28px; font-weight: 900; cursor: pointer; color: var(--muted); }
+  .detail .now { margin: 6px 4px; padding: 7px 10px; border-radius: 10px; background: var(--line); font-size: 12.5px; font-weight: 800; }
+  .bad { color: var(--bad); }
+  .kv { display: grid; grid-template-columns: 96px 1fr; gap: 4px 10px; align-items: center; font-size: 12px; font-weight: 700; padding: 0 4px; }
+  .kv > span:nth-child(odd) { color: var(--muted); display: flex; align-items: center; }
+  .kv.bars > span { display: flex; align-items: center; }
+  .led { gap: 8px; }
+  .led b { font-size: 12px; min-width: 28px; text-align: right; }
+  .trace { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .trace .step { display: grid; grid-template-columns: 84px 1fr; gap: 8px; padding: 7px 9px; border-top: 1px solid var(--line); align-items: start; }
+  .trace .step:first-child { border-top: 0; }
+  .trace .step > span { font-size: 10px; font-weight: 900; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); padding-top: 2px; }
+  .trace pre { margin: 0; font-size: 10px; white-space: pre-wrap; word-break: break-word; color: var(--muted); }
+  .trace p { margin: 0 !important; font-size: 12px !important; }
+  .trace code.big { font-size: 12px; font-weight: 700; background: #eef0ff; color: #3949c7; padding: 2px 7px; border-radius: 6px; }
+  .opts { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+  .opts li { display: grid; grid-template-columns: 14px 1fr auto; gap: 6px; font-size: 11px; padding: 2px 5px; border-radius: 6px; color: var(--muted); }
+  .opts li code { color: var(--ink); }
+  .opts li.pick { background: #e4f8eb; }
+  .opts li.pick code { color: #137a3f; font-weight: 700; }
+  .reject { margin: 8px 0 2px; padding: 8px 10px; border-radius: 10px; background: #fff0f0; border: 1px solid #ffd1d1; font-size: 12px; }
+  .reject b { color: #b42324; font-size: 10.5px; letter-spacing: .6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; padding: 0 4px; }
+  .chips span { font-size: 12px; font-weight: 800; padding: 3px 8px; border-radius: 99px; background: var(--line); }
+  .mem { margin: 0; padding: 0 4px; list-style: none; display: grid; gap: 4px; font-size: 12px; font-weight: 700; }
+  details { margin: 4px 0; border-radius: 10px; background: var(--line); padding: 6px 10px; }
+  summary { font-weight: 900; font-size: 12.5px; cursor: pointer; }
+  dl { display: grid; grid-template-columns: 96px 1fr; gap: 4px 10px; margin: 6px 0 2px; font-size: 11.5px; font-weight: 700; }
+  dt { color: var(--muted); }
+  dd { margin: 0; }
+  button.ghost { border: 1px solid var(--line); background: transparent; border-radius: 9px; padding: 6px 10px; font-weight: 900; font-size: 12px; cursor: pointer; }
+  .filters { display: flex; gap: 4px; margin-bottom: 6px; }
+  .filters button { border: 0; background: var(--line); border-radius: 99px; padding: 4px 10px; font-weight: 900; font-size: 11px; cursor: pointer; color: var(--muted); }
+  .filters button.on { background: var(--ink); color: #fff; }
+  .dayhead { font-size: 10.5px; font-weight: 900; letter-spacing: 1px; color: var(--muted); margin: 10px 4px 4px; }
+  .hist { display: grid; grid-template-columns: 16px 1fr auto; gap: 6px; font-size: 12px; font-weight: 700; padding: 3px 4px; line-height: 1.35; }
+  .hist .k { color: var(--muted); text-align: center; }
+  .hist .c { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); padding-top: 2px; }
+  .hist.milestone { background: #fff7dd; border-radius: 8px; font-weight: 900; }
+  .hist.milestone .k { color: #d39b00; }
+  .hist.law .t, .hist.vote .t { color: #3949c7; }
+  .hist.problem .t { color: #b45309; }
+  .law { padding: 8px 10px; margin: 4px 0; border-radius: 10px; background: #f3f1ff; }
+  .law b { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #3949c7; }
+  .prop { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: 12px; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  .prop b.passed { color: var(--ok); font-size: 10.5px; }
+  .prop b.failed { color: var(--bad); font-size: 10.5px; }
+  .prop b.open { color: var(--warn); font-size: 10.5px; }
+  .tx { font-size: 11.5px; font-weight: 700; padding: 3px 0; }
+
+  /* bottom */
+  #res { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 12px; padding: 8px 14px; font-size: 13px; font-weight: 800; white-space: nowrap; z-index: 4; }
+  #res small { color: var(--muted); margin-left: 3px; font-size: 10px; }
+  #modes { position: fixed; left: 14px; bottom: 14px; display: flex; gap: 3px; padding: 4px; border-radius: 14px; z-index: 4; }
+  #modes button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 0; background: transparent; border-radius: 10px; padding: 7px 12px 7px 10px; font-weight: 900; font-size: 12px; cursor: pointer; }
+  #modes .mi { width: 17px; height: 17px; flex: none; }
+  #modes button.on { background: var(--ink); color: #fff; }
+  #railToggle { display: none; position: fixed; right: 14px; bottom: 14px; border: 0; width: 42px; height: 42px; font-size: 18px; cursor: pointer; z-index: 6; }
+  #toast { position: fixed; top: 74px; left: 50%; transform: translate(-50%, -12px); max-width: min(560px, calc(100% - 32px)); padding: 10px 16px; border-radius: 14px; background: #1c1f2e; color: #fff; font-weight: 900; font-size: 14px; text-align: center; opacity: 0; transition: opacity .35s, transform .35s; pointer-events: none; z-index: 8; box-shadow: 0 10px 30px rgba(0, 0, 0, .25); }
+  #toast span { display: block; font-size: 10px; letter-spacing: 1.2px; color: #ffd36b; margin-bottom: 2px; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* lineup mode is a clean showcase */
+  body.lineup #left, body.lineup #rail, body.lineup #res, body.lineup #railToggle, body.lineup .pop, body.lineup #speed, body.lineup .watch { display: none; }
+  body.lineup .tag .nm { display: none; }
+
+  /* ---------- meet the dots: a warm studio, like a toy photo shoot ---------- */
+  #meet { display: none; }
+  body.lineup #meet { display: block; }
+  .meet-head { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 3; pointer-events: none; width: min(720px, calc(100% - 32px)); }
+  .meet-head .eyebrow { margin: 0 0 8px; font-size: 11px; font-weight: 900; letter-spacing: 2.4px; color: #9a8b7d; }
+  .meet-head h2 { margin: 0; font-size: clamp(26px, 4vw, 46px); font-weight: 900; letter-spacing: -1px; line-height: 1.15; color: #1c1f2e; }
+  .meet-head h2 u { text-decoration-line: underline; text-decoration-color: var(--c); text-decoration-thickness: 4px; text-underline-offset: 7px; text-decoration-skip-ink: none; }
+  .meet-head h2 .amp { color: #9a8b7d; font-weight: 800; }
+  #meetCards { position: fixed; left: 50%; bottom: 74px; transform: translateX(-50%); width: min(1080px, calc(100% - 28px)); display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; z-index: 4; }
+  .mcard { position: relative; text-align: left; border: 0; border-radius: 16px; padding: 12px 14px 12px; background: rgba(255, 252, 248, .82); color: #1c1f2e; cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(80, 60, 40, .08), 0 10px 26px rgba(90, 60, 30, .12); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transition: transform .2s, box-shadow .2s; font-family: inherit; overflow: hidden; }
+  .mcard::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 3px; background: var(--c); }
+  .mcard:hover { transform: translateY(-3px); }
+  .mcard.on { transform: translateY(-6px); box-shadow: 0 0 0 2px var(--c), 0 14px 30px rgba(90, 60, 30, .18); }
+  .mcard .mh { display: flex; align-items: center; gap: 9px; }
+  .mcard .mh i { width: 26px; height: 26px; border-radius: 50%; background: var(--c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .15); flex: none; }
+  .mcard .mh b { font-size: 17px; }
+  .mcard .mh span { font-size: 11px; font-weight: 800; color: #8a7f75; display: block; }
+  .mcard .role { margin-left: auto; font-style: normal; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 99px; background: color-mix(in srgb, var(--c) 24%, white); color: #1c1f2e; white-space: nowrap; }
+  .mcard .tagline { margin: 8px 0 6px; font-size: 12.5px; font-weight: 700; line-height: 1.35; color: #3b4054; }
+  .mcard .facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-size: 11px; font-weight: 700; color: #8a7f75; }
+  .mcard .facts b { color: #1c1f2e; font-weight: 800; }
+  .mcard .now { margin-top: 7px; font-size: 11.5px; font-weight: 800; color: #1c1f2e; }
+  .mcard .now::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #2bb24c; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 0 3px rgba(43, 178, 76, .18); }
+  .mcard .quote { display: none; margin: 7px 0 0; font-size: 11.5px; font-weight: 600; font-style: italic; line-height: 1.4; color: #5b5f72; }
+  .mcard.on .quote { display: block; }
+  .mcard .acts { display: none; gap: 6px; margin-top: 9px; }
+  .mcard.on .acts { display: flex; }
+  .mcard .acts span { flex: 1; text-align: center; font-size: 11px; font-weight: 900; padding: 6px 8px; border-radius: 9px; background: rgba(28, 31, 46, .06); }
+  .mcard .acts span:first-child { background: color-mix(in srgb, var(--c) 30%, white); }
+  /* small screens: compact cards (name + what they're doing); the selected one shows everything */
+  @media (max-width: 900px), (max-height: 640px) {
+    #meetCards { bottom: 66px; }
+    .mcard { padding: 9px 12px; }
+    .mcard .tagline, .mcard .facts { display: none; }
+    .mcard.on .tagline { display: block; }
+    .mcard .now { margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .meet-head { top: 64px; }
+  }
+  @media (max-width: 900px) {
+    #meetCards { grid-template-columns: repeat(4, minmax(180px, 58vw)); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding: 8px 2px 2px; }
+    #meetCards::-webkit-scrollbar { display: none; }
+    .mcard { scroll-snap-align: center; }
+  }
+  @media (max-width: 520px) {
+    #meetCards { grid-template-columns: repeat(4, minmax(220px, 80vw)); }
+    .mcard .mh span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mcard .mh > div { min-width: 0; }
+  }
+  @media (max-height: 520px) {
+    .meet-head .eyebrow { margin-bottom: 4px; }
+    .meet-head h2 { font-size: 24px; }
+    .mcard .mh span, .mcard.on .tagline { display: none; }
+  }
+
+  /* name tags + speech */
+  .tag { display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: auto; cursor: pointer; user-select: none; }
+  .tag .bubble { position: relative; max-width: 190px; font-size: 20px; line-height: 1.2; padding: 6px 10px 7px; border-radius: 14px; background: #fff; color: #1c1f2e; box-shadow: 0 5px 16px rgba(0, 0, 0, .16); transform: scale(0); transform-origin: 50% 110%; transition: transform .2s cubic-bezier(.3, 1.7, .5, 1); text-align: center; }
+  .tag .bubble.text { font-size: 12px; font-weight: 800; }
+  .tag .bubble.show { transform: scale(1); }
+  .tag .bubble::after { content: ''; position: absolute; left: 50%; bottom: -6px; margin-left: -6px; border: 6px solid transparent; border-top-color: #fff; border-bottom: 0; }
+  .tag .nm { display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 900; padding: 3px 9px 3px 7px; border-radius: 99px; background: var(--card); color: var(--ink); box-shadow: 0 3px 10px rgba(0, 0, 0, .12); transition: transform .15s; }
+  .tag .nm i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+  .tag .nm .act { font-size: 12px; }
+  .tag:hover .nm { transform: scale(1.08); }
+
+  .spacebtn { display: inline-flex; align-items: center; gap: 7px; border: 0; background: var(--ink); color: #fff; border-radius: 14px; padding: 9px 14px 9px 12px; font-weight: 900; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .spacebtn svg { width: 17px; height: 17px; flex: none; }
+  .openspace { width: 100%; margin: 2px 0 8px; border: 0; border-radius: 11px; padding: 10px; background: var(--ink); color: #fff; font-weight: 900; font-size: 12.5px; cursor: pointer; }
+
+  /* ---------- the Space: the civilization's memory as pages ---------- */
+  #spaceView { position: fixed; inset: 0; z-index: 30; display: none; background: #fbfbfa; color: #1c1f2e; --muted: #6a7088; }
+  #spaceView.open { display: grid; grid-template-columns: 272px 1fr; }
+  .sv-side { background: #f3f3f0; border-right: 1px solid rgba(0, 0, 0, .06); display: flex; flex-direction: column; min-height: 0; }
+  .sv-brand { padding: 16px 16px 10px; font-weight: 900; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+  .sv-brand .logo { width: 26px; height: 26px; border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 1px 5px rgba(30, 70, 160, .25); }
+  .sv-tree { overflow: auto; padding: 4px 8px 16px; flex: 1; }
+  .sv-row { display: flex; align-items: center; padding-left: calc(var(--d) * 14px); border-radius: 7px; }
+  .sv-node { --d: 0; }
+  .sv-row:hover { background: rgba(28, 31, 46, .05); }
+  .sv-row.on { background: rgba(28, 31, 46, .09); }
+  .sv-row a { flex: 1; display: flex; align-items: center; gap: 7px; padding: 4px 6px; color: inherit; text-decoration: none; font-size: 13px; font-weight: 700; min-width: 0; }
+  .sv-row a .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sv-row a .n { margin-left: auto; font-size: 10.5px; color: var(--muted); }
+  .sv-row .ic { width: 18px; text-align: center; flex: none; }
+  .sv-row .dot { margin: 0 4px 0 4px; }
+  .caret { border: 0; background: transparent; width: 18px; height: 20px; font-size: 10px; color: var(--muted); cursor: pointer; transition: transform .15s; flex: none; padding: 0; }
+  .caret.open { transform: rotate(90deg); }
+  .caret-pad { width: 18px; flex: none; }
+  .sv-foot { padding: 10px 16px; margin: 0; border-top: 1px solid rgba(0, 0, 0, .06); }
+  .sv-main { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .sv-top { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; gap: 8px; }
+  .sv-top button { border: 1px solid rgba(0, 0, 0, .1); background: #fff; border-radius: 10px; padding: 7px 12px; font-weight: 900; font-size: 12px; cursor: pointer; }
+  .sv-menu { visibility: hidden; }
+  .sv-page { overflow: auto; flex: 1; }
+  .sv-page article { max-width: 800px; margin: 0 auto; padding: 4px 36px 90px; }
+  .sv-page a { color: #3949c7; text-decoration: none; font-weight: 800; }
+  .sv-page a:hover { text-decoration: underline; }
+  article h1 { font-size: 32px; letter-spacing: -.6px; margin: 8px 0 2px; display: flex; gap: 10px; align-items: center; line-height: 1.15; }
+  article h2 { font-size: 15px; margin: 28px 0 8px; }
+  article h4 { margin: 14px 0 5px; font-size: 10.5px; font-weight: 900; letter-spacing: .9px; text-transform: uppercase; color: var(--muted); display: flex; gap: 6px; align-items: baseline; }
+  article p { font-size: 14px; line-height: 1.55; }
+  .crumbs { font-size: 12px; color: var(--muted); }
+  .crumbs a { color: var(--muted) !important; }
+  .pmeta { font-size: 11.5px; color: var(--muted); margin: 2px 0 12px; }
+  .lead { font-size: 15px !important; color: #3b4054; }
+  article table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0; }
+  article th, article td { text-align: left; padding: 7px 8px; border-bottom: 1px solid rgba(0, 0, 0, .07); vertical-align: top; }
+  article th { font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); font-weight: 900; }
+  article table.kvt thead { display: none; }
+  article table.kvt td:first-child { color: var(--muted); width: 190px; font-weight: 700; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin: 16px 0 4px; }
+  .stats div { background: #fff; border: 1px solid rgba(0, 0, 0, .07); border-radius: 12px; padding: 12px 14px; }
+  .stats b { font-size: 26px; display: block; }
+  .stats span { font-size: 10.5px; color: var(--muted); font-weight: 900; text-transform: uppercase; letter-spacing: .6px; }
+  .rows { list-style: none; padding: 0; margin: 0; }
+  .rows li { padding: 8px 2px; border-bottom: 1px solid rgba(0, 0, 0, .06); font-size: 13.5px; font-weight: 700; line-height: 1.45; }
+  .rows .day { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-right: 6px; }
+  .rows.log li { font-weight: 600; font-size: 12.5px; padding: 5px 2px; }
+  .clk { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--muted); margin-right: 8px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 8px 0; }
+  .pcard { display: flex; flex-direction: column; gap: 4px; padding: 14px; background: #fff; border: 1px solid rgba(0, 0, 0, .07); border-radius: 12px; color: inherit !important; font-size: 12.5px; font-weight: 700 !important; }
+  .pcard:hover { text-decoration: none !important; border-color: rgba(79, 107, 255, .35); box-shadow: 0 4px 16px rgba(20, 30, 70, .08); }
+  .pcard .pi { font-size: 20px; }
+  .pcard b { font-size: 14.5px; }
+  .pcard .sw { width: 28px; height: 28px; }
+  blockquote { margin: 10px 0; padding: 10px 14px; border-left: 3px solid #4f6bff; background: #f3f5ff; border-radius: 0 10px 10px 0; font-size: 13.5px; line-height: 1.55; font-weight: 600; }
+  .callout { padding: 12px 14px; background: #fff7dd; border-radius: 12px; font-weight: 800; font-size: 13.5px; line-height: 1.6; margin: 10px 0; }
+  .empty { color: var(--muted); font-style: italic; font-size: 13px !important; }
+  .q { font-weight: 800; }
+  b.passed { color: var(--ok); } b.failed { color: var(--bad); }
+  .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .spark { margin: 0; background: #fff; border: 1px solid rgba(0, 0, 0, .07); border-radius: 12px; padding: 10px 12px 4px; }
+  .spark figcaption { font-size: 12px; font-weight: 900; }
+  .spark svg { width: 100%; height: auto; display: block; cursor: crosshair; }
+  .spark polyline { fill: none; stroke: #4f6bff; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .spark circle { fill: #4f6bff; stroke: #fff; stroke-width: 2; }
+  .spark .axis { stroke: rgba(0, 0, 0, .25); }
+  .spark .grid { stroke: rgba(0, 0, 0, .07); }
+  .spark .tick { font-size: 10px; fill: #6a7088; font-family: Nunito, sans-serif; }
+  .spark .val { font-size: 11px; font-weight: 900; fill: #1c1f2e; font-family: Nunito, sans-serif; }
+  .spark .xh { stroke: rgba(28, 31, 46, .4); stroke-dasharray: 3 3; }
+  .sv-tip { position: fixed; display: none; pointer-events: none; background: #1c1f2e; color: #fff; font-size: 12px; padding: 5px 9px; border-radius: 7px; z-index: 40; font-weight: 700; }
+  .mapwrap { background: #e8f3fb; border-radius: 16px; padding: 10px; }
+  .map { width: 100%; max-width: 560px; display: block; margin: 0 auto; font-family: Nunito, sans-serif; }
+  .map .land { fill: #cfe8bf; stroke: #b98556; stroke-width: 5; stroke-linejoin: round; }
+  .map .tree { fill: #6fb55e; } .map .stump { fill: #b78a5c; }
+  .map .bld rect { fill: #fff; stroke: #1c1f2e; stroke-width: 1.5; }
+  .map .bld.building rect, .map .bld.planned rect { fill: #fff8e6; stroke-dasharray: 4 3; }
+  .map .bld rect[style] { stroke-width: 3; }
+  .map .bi, .map .zi { font-size: 15px; text-anchor: middle; }
+  .map .zl { font-size: 10px; text-anchor: middle; fill: #4b5166; font-weight: 800; }
+  .map .ag circle { stroke: #fff; stroke-width: 2.5; }
+  .map .an { font-size: 11px; font-weight: 900; text-anchor: middle; fill: #1c1f2e; paint-order: stroke; stroke: #fff; stroke-width: 3; }
+  .legend { list-style: none; display: flex; flex-wrap: wrap; gap: 14px; padding: 0; font-size: 12px; font-weight: 700; }
+  .matrix td, .matrix th { text-align: center !important; }
+  .matrix th:first-child { text-align: left !important; }
+  .heat { font-weight: 900; border: 3px solid #fbfbfa; border-radius: 8px; }
+  .self { color: var(--muted); }
+  .entry { padding: 12px 0; border-bottom: 1px solid rgba(0, 0, 0, .06); }
+  .entry p { margin: 4px 0 0; }
+  .hl { font-size: 12px; color: #8a6000; margin-top: 4px; font-weight: 800; }
+  .opts.big li { font-size: 12.5px; padding: 5px 8px; }
+  .detail.citizen .now { margin: 8px 0; }
+  .kv.wide { grid-template-columns: 130px 1fr; }
+  @media (max-width: 760px) {
+    #spaceView.open { grid-template-columns: 1fr; }
+    .sv-side { position: fixed; top: 0; bottom: 0; left: 0; width: min(300px, 85vw); z-index: 2; transform: translateX(-105%); transition: transform .2s; box-shadow: 10px 0 30px rgba(0, 0, 0, .12); }
+    #spaceView.side-open .sv-side { transform: none; }
+    .sv-menu { visibility: visible; }
+    .sv-top { padding-top: max(10px, env(safe-area-inset-top)); }
+    .sv-side { padding-top: env(safe-area-inset-top); }
+    .sv-page article { padding: 4px 18px calc(60px + env(safe-area-inset-bottom)); }
+    article h1 { font-size: 24px; }
+    .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .stats div { padding: 10px 11px; }
+    .stats b { font-size: 22px; }
+    .stats span { font-size: 9.5px; }
+  }
+
+  @media (max-width: 1180px) { #left { width: 270px; } #rail { width: 300px; } #eventCard { display: none; } }
+  /* ---------- phones, tablets and short windows: one column, and the panels slide up as a sheet ---------- */
+  .sheet-head { display: none; }
+  @media (max-width: 900px), (max-height: 500px) {
+    :root { --safe-t: max(10px, env(safe-area-inset-top)); --safe-b: max(10px, env(safe-area-inset-bottom)); --bar-w: min(640px, calc(100% - 20px)); }
+    #top { top: var(--safe-t); width: var(--bar-w); gap: 8px; }
+    .clock { margin-left: auto; }
+    .pop, .watch { display: none; }
+    /* the live decision shrinks to a ticker under the bar; tap it for the votes */
+    #left { top: calc(var(--safe-t) + 56px); left: 50%; right: auto; bottom: auto; width: var(--bar-w); transform: translateX(-50%); }
+    #feedCard, #eventCard { display: none; }
+    #left #decision { padding: 9px 13px 10px; cursor: pointer; max-height: calc(100dvh - 250px); overflow: auto; }
+    #decision h3 { margin-bottom: 3px; }
+    #decision h3::after { content: ''; margin-left: auto; width: 7px; height: 7px; border: solid var(--muted); border-width: 0 2px 2px 0; transform: translateY(-2px) rotate(45deg); transition: transform .2s; }
+    #decision.open h3::after { transform: translateY(2px) rotate(-135deg); }
+    #decision:not(.open) .q { margin: 0; font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    #decision:not(.open) > :not(h3):not(.q) { display: none; }
+    /* along the bottom: the two views, the stores, and the button that opens the panels */
+    #modes { left: 10px; right: 70px; bottom: var(--safe-b); }
+    body.lineup #modes { right: 10px; }
+    #modes button { flex: 1; padding: 11px 6px; font-size: 13px; }
+    #railToggle { display: block; right: 10px; bottom: var(--safe-b); width: 52px; height: 51px; border-radius: 16px; }
+    #res { bottom: calc(var(--safe-b) + 61px); max-width: calc(100% - 20px); gap: 11px; padding: 7px 14px; font-size: 12.5px; overflow-x: auto; scrollbar-width: none; }
+    #res::-webkit-scrollbar { display: none; }
+    #rail { display: none; top: auto; bottom: 0; left: 50%; right: auto; transform: translateX(-50%); width: min(680px, 100%); height: min(64dvh, 640px); border-radius: 22px 22px 0 0; padding-bottom: env(safe-area-inset-bottom); z-index: 7; }
+    body.rail-open #rail { display: flex; }
+    body.rail-open #res, body.rail-open #left, body.rail-open #modes, body.rail-open #railToggle { display: none; }
+    .sheet-head { display: flex; align-items: center; justify-content: center; position: relative; height: 40px; flex: none; }
+    .sheet-head .grab { width: 40px; height: 5px; border-radius: 99px; background: rgba(28, 31, 46, .16); }
+    .sheet-head button { position: absolute; right: 8px; top: 5px; width: 34px; height: 34px; border: 0; border-radius: 11px; background: var(--line); font-weight: 900; font-size: 14px; color: var(--muted); cursor: pointer; }
+    #tabs { padding-top: 0; }
+    #tabs button { padding: 9px 2px; font-size: 12.5px; }
+    #panel { padding: 8px 10px 18px; }
+    .meet-head { top: calc(var(--safe-t) + 62px); }
+    #meetCards { bottom: calc(var(--safe-b) + 60px); }
+    #toast { top: calc(var(--safe-t) + 58px); }
+  }
+  @media (max-width: 520px) {
+    .brand .logo { width: 32px; height: 32px; }
+    .brand .bt { flex-direction: column; align-items: flex-start; gap: 0; }
+    .brand b { font-size: 16px; line-height: 1.15; }
+    .live { font-size: 9px; }
+  }
+  @media (max-width: 400px) {
+    .spacebtn span { display: none; }
+    .spacebtn { padding: 9px 10px; }
+    .clock { padding: 6px 10px 6px 8px; gap: 6px; }
+  }
+  @media (max-height: 500px) { /* a phone on its side: keep the ticker out of the middle, and the bottom to one row */
+    #left { left: 10px; transform: none; width: min(380px, 46vw); }
+    #modes { right: auto; width: min(360px, 42vw); }
+    #res { left: auto; right: 72px; transform: none; bottom: var(--safe-b); height: 51px; max-width: calc(58vw - 100px); }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="loading">waking everyone up…</div>
+
+<header id="top" class="card">
+  <div class="brand"><img class="logo" src="assets/icon-96.png" alt="" width="34" height="34"><div class="bt"><b>dot.home</b><span class="live" id="liveBadge">LIVE</span></div></div>
+  <div class="clock" id="clock" title="Time on the island"><svg id="cSky" class="sky" viewBox="0 0 24 24" aria-hidden="true"></svg><b id="cDay">Day 1</b><span id="cTime">06:00</span></div>
+  <div class="pop">POPULATION <b>4</b></div>
+  <div class="watch" id="watching"></div>
+  <button id="openSpace" class="spacebtn" title="The civilization's shared memory" aria-label="Open the Space"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="12.5" height="15.5" rx="2.6"/><path d="M8 21h9.4a2.6 2.6 0 0 0 2.6-2.6V7.5M7.8 8.2h5M7.8 12.2h5"/></svg><span>Space</span></button>
+  <div id="speed" class="seg" title="dev: simulation speed"><button data-s="0">⏸</button><button data-s="1">1×</button><button data-s="2">10×</button><button data-s="3">40×</button><button data-s="4">160×</button></div>
+</header>
+
+<section id="left">
+  <div class="card" id="eventCard"><h3>Current event</h3><p id="evText"></p><div id="evMeta" class="muted small"></div></div>
+  <div class="card" id="decision"></div>
+  <div class="card" id="feedCard">
+    <div id="feedTabs" class="seg small"><button data-f="talk" class="on">💬 Conversations</button><button data-f="engine">⚙ Engine</button></div>
+    <div id="feed"></div>
+  </div>
+</section>
+
+<aside id="rail" class="card">
+  <div class="sheet-head"><span class="grab"></span><button id="railClose" aria-label="Close">✕</button></div>
+  <nav id="tabs"><button data-tab="agents" class="on">Agents</button><button data-tab="space">Space</button><button data-tab="history">History</button><button data-tab="laws">Laws</button><button data-tab="economy">Economy</button></nav>
+  <div id="panel"></div>
+</aside>
+<button id="railToggle" class="card" aria-label="Open the Space">☰</button>
+
+<div id="res" class="card"></div>
+<nav id="modes" class="card">
+  <button data-mode="land" class="on"><svg class="mi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13.6h18l-6.3 6.5a3.6 3.6 0 0 1-5.4 0z" fill="currentColor"/><path d="M8.4 3.6l3.5 7.2H4.9z" fill="currentColor" stroke-width="1.2"/><path d="M8.4 10.8v2M16.2 12v1.6"/><circle cx="16.2" cy="9.6" r="2.4" fill="currentColor" stroke="none"/></svg>The world</button>
+  <button data-mode="lineup"><svg class="mi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.6" cy="7.6" r="3.7" fill="#2f6dff"/><circle cx="16.4" cy="7.6" r="3.7" fill="#8fdc2a"/><circle cx="7.6" cy="16.4" r="3.7" fill="#ffc21f"/><circle cx="16.4" cy="16.4" r="3.7" fill="#ff47b0"/></svg>Meet the dots</button>
+</nav>
+<section id="meet">
+  <div class="meet-head">
+    <p class="eyebrow" id="meetDay">DAY 1 ON THE ISLAND</p>
+    <h2><u style="--c:#2f6dff">Nimbus</u>, <u style="--c:#8fdc2a">Moss</u>, <u style="--c:#ffc21f">Sol</u> <span class="amp">&amp;</span> <u style="--c:#ff47b0">Rosie</u></h2>
+  </div>
+  <div id="meetCards"></div>
+</section>
+<div id="toast"></div>
+<div id="fade"></div>
+
+<div id="spaceView" aria-label="The dot.home Space">
+  <aside class="sv-side">
+    <div class="sv-brand"><img class="logo" src="assets/icon-96.png" alt="" width="26" height="26">dot.home <span class="muted">Space</span></div>
+    <nav class="sv-tree"></nav>
+    <p class="sv-foot muted small">Read-only. Every page is written by the simulation.</p>
+  </aside>
+  <main class="sv-main">
+    <div class="sv-top"><button class="sv-menu">☰ Pages</button><button class="sv-close">← Back to the world</button></div>
+    <div class="sv-page"></div>
+  </main>
+  <div class="sv-tip"></div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import * as E from './sim/engine.js';
+import * as space from './sim/space.js';
+import { hourOf, dayOf, DAY, TICK } from './sim/catalog.js';
+import { World3D, ISLAND_R, ZONES, PLOTS, HOME_PLOTS, SIZE } from './world/props.js';
+import { createUI, taskIcon, describeTask, esc } from './ui/panels.js';
+import { IDENTITIES, roleOf } from './sim/minds.js';
+import { createSpaceView } from './ui/space-view.js';
+
+// ---------- utils ----------
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const clamp = THREE.MathUtils.clamp;
+const damp = (c, t, k, dt) => c + (t - c) * (1 - Math.exp(-k * dt));
+const angDiff = (a, b) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; };
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const hash2 = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+function noise2(x, y) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+const fbm = (x, y) => 0.55 * noise2(x, y) + 0.3 * noise2(x * 2.03 + 5.2, y * 2.03 + 1.3) + 0.15 * noise2(x * 4.1 + 9.1, y * 4.1 + 3.7);
+const V3 = (x = 0, y = 0, z = 0) => new THREE.Vector3(x, y, z);
+const tmpV = V3();
+
+function canvasTex(w, h, draw, srgb = true) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  return t;
+}
+
+// ---------- renderer / scene ----------
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.NeutralToneMapping;
+app.appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.className = 'labels';
+app.appendChild(labelRenderer.domElement);
+
+const scene = new THREE.Scene();
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+scene.fog = new THREE.Fog('#d6effd', 28, 75);
+
+const camera = new THREE.PerspectiveCamera(35, innerWidth / innerHeight, 0.05, 300);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 1.3;
+
+// home views; `half` is the half-width that must stay in frame, so narrow/portrait windows back off
+// minDist keeps the camera from getting so close that fur fills the whole screen (that's what lags)
+// on a tall phone screen the island is seen from higher up, so it fills the height; the very edges are
+// allowed to crop (fitting the whole width would shrink the dots to a few pixels)
+const VIEWS = {
+  land: { dir: V3(0.6, 6.4, 11.6).normalize(), tall: { dir: V3(0.5, 9.6, 10.4).normalize(), dist: 40 }, dist: 19, half: 9.6, target: V3(0, -0.4, 0.4), minDist: 3.2, maxDist: 40, maxPolar: 0.47 },
+  lineup: { dir: V3(0, 0.55, 3.9).normalize(), tall: { dir: V3(0, 0.75, 3.9).normalize(), dist: 15 }, dist: 7.2, half: 3.0, target: V3(0, 0.12, 0), minDist: 6.0, maxDist: 12, maxPolar: 0.5 },
+};
+for (const v of Object.values(VIEWS)) Object.defineProperty(v, 'pos', {
+  get() {
+    if (camera.aspect < 0.8 && v.tall) return v.target.clone().addScaledVector(v.tall.dir, v.tall.dist);
+    const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)) * camera.aspect;
+    return v.target.clone().addScaledVector(v.dir, Math.min(v.maxDist, Math.max(v.dist, v.half / tanH)));
+  },
+});
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight('#e4f4ff', '#9cc27c', 1.15);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight('#fff2dc', 2.4);
+sun.position.set(-5.5, 10, 6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -10.5, right: 10.5, top: 10.5, bottom: -10.5, near: 1, far: 40 });
+sun.shadow.bias = -0.0005;
+sun.shadow.normalBias = 0.02;
+scene.add(sun);
+// studio rig: a soft key from the front and coloured rims that make the fuzz glow
+const key = new THREE.DirectionalLight('#ffffff', 0);
+key.position.set(1.2, 3, 5);
+scene.add(key);
+const rims = [
+  [V3(-3.2, 1.1, -1.6), '#27ffa8', 9],
+  [V3(3.2, 1.1, -1.6), '#ff3fd2', 9],
+  [V3(0.4, 2.6, -2.4), '#4f6bff', 10],
+].map(([p, c, i]) => { const l = new THREE.PointLight(c, 0, 9, 2); l.position.copy(p); l.userData.on = i; scene.add(l); return l; });
+
+// ---------- post: soft contact shadows (GTAO) + a touch of glow on the stage ----------
+const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }));
+composer.setPixelRatio(renderer.getPixelRatio());
+composer.setSize(innerWidth, innerHeight);
+composer.addPass(new RenderPass(scene, camera));
+const ao = new GTAOPass(scene, camera, innerWidth, innerHeight);
+ao.updateGtaoMaterial({ radius: 0.4, distanceExponent: 1.5, thickness: 1.2, scale: 1.1, samples: 16 });
+ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 5, rings: 2, samples: 16 });
+ao.blendIntensity = 0.85;
+// the outer fur shell would read as a solid inflated hull, and the mirror would re-render the scene: keep both out of AO
+ao.overrideVisibility = function () {
+  const cache = this._visibilityCache;
+  this.scene.traverse((o) => {
+    cache.set(o, o.visible);
+    if (o.isPoints || o.isLine || o.isLineSegments || o.userData.noAO) o.visible = false;
+  });
+};
+composer.addPass(ao);
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.32, 0.55, 0.82);
+bloom.enabled = false;
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---------- fur (shell texturing) ----------
+// Every fuzzy mesh is drawn once as a dark "skin" and then SHELLS more times, each
+// pushed a little further out along its normals; each shell only keeps the pixels
+// where a fibre still exists at that height, so the fibres taper into soft tips.
+const FUR = { shells: 30, len: 0.05, density: 170 }; // len: keep in sync with FUR in blender/build_agents.py
+const FUR_GLSL = /* glsl */`
+  uniform float furLen;
+  uniform float furDensity;
+  uniform float shellN;
+  uniform vec3 furPush;
+  uniform vec4 furBald[2]; // xyz + radius: fur is trimmed short around the eyes so they sit clear of the fluff
+  varying vec3 vFurP;
+  varying float vLayer;
+  float trim(vec3 p) {
+    float k = 1.0;
+    for (int i = 0; i < 2; i++) {
+      float r = furBald[i].w;
+      if (r > 0.0) k = min(k, mix(0.3, 1.0, smoothstep(r, r * 1.9, distance(p, furBald[i].xyz))));
+    }
+    return k;
+  }
+`;
+const FIBRE_GLSL = /* glsl */`
+  vec3 hash33(vec3 p) {
+    p = fract(p * vec3(.1031, .1030, .0973));
+    p += dot(p, p.yxz + 33.33);
+    return fract((p.xxy + p.yxx) * p.zyx);
+  }
+  // one fibre per cell: a column that leans a little, thins out and stops at a random length
+  vec2 fibre(vec3 p, float layer) {
+    vec3 cell = floor(p);
+    vec3 h = hash33(cell);
+    vec3 bend = hash33(cell + 17.7) - 0.5;
+    float len = 0.5 + 0.5 * h.x;
+    float r = (0.52 * pow(max(1.0 - layer / len, 0.0), 0.8) + 0.06) * step(layer, len);
+    vec3 c = 0.25 + 0.5 * h + bend * 0.5 * layer * layer;
+    float d = length(fract(p) - c);
+    float w = fwidth(d) * 0.8 + 1e-4;
+    return vec2(1.0 - smoothstep(r - w, r + w, d), h.y);
+  }
+`;
+
+function furMaterial(color, agent, { shell = false, len = 1, sheen = 0.45, bald = true } = {}) {
+  const c = new THREE.Color(color);
+  const m = new THREE.MeshPhysicalMaterial({
+    color: c, roughness: 0.88,
+    sheen: 1, sheenRoughness: 0.4, sheenColor: c.clone().lerp(new THREE.Color('#ffffff'), sheen),
+    alphaToCoverage: shell,
+  });
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.furLen = { value: FUR.len * len };
+    sh.uniforms.furDensity = { value: FUR.density };
+    sh.uniforms.shellN = agent.u.shellN;
+    sh.uniforms.furPush = agent.u.push;
+    sh.uniforms.furBald = bald ? agent.u.bald : { value: [new THREE.Vector4(), new THREE.Vector4()] };
+    const defs = shell ? '#define FUR_SHELL\n' : '';
+    sh.vertexShader = defs + sh.vertexShader
+      .replace('#include <common>', `#include <common>\n${FUR_GLSL}`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        vFurP = position;
+        vLayer = 0.0;
+        #ifdef FUR_SHELL
+          vLayer = float(gl_InstanceID + 1) / shellN;
+          transformed += objectNormal * vLayer * furLen * trim(position);
+          // tips sag a little and lag behind when the body moves
+          transformed += (furPush + vec3(0.0, -0.35 * furLen, 0.0)) * vLayer * vLayer;
+        #endif`);
+    sh.fragmentShader = defs + sh.fragmentShader
+      .replace('#include <common>', `#include <common>\n${FUR_GLSL}\n${FIBRE_GLSL}`)
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        #ifdef FUR_SHELL
+          vec3 fp = vFurP * furDensity;
+          vec2 fa = fibre(fp, vLayer);
+          vec2 fb = fibre(fp * 1.71 + 17.3, vLayer * 1.08);
+          vec2 fc = fibre(fp * 2.93 + 41.9, vLayer * 1.25);   // fine underfur fills the gaps near the skin
+          float cover = max(max(fa.x, fb.x), fc.x);
+          if (!(cover >= 0.03)) discard; // also catches NaN
+          diffuseColor.a = cover;
+          diffuseColor.rgb *= 0.88 + 0.24 * (fa.x > fb.x ? fa.y : fb.y);
+        #endif
+        diffuseColor.rgb *= mix(0.5, 1.12, pow(vLayer, 0.7)); // shadowed roots, bright tips`);
+  };
+  m.customProgramCacheKey = () => 'fur-' + shell;
+  return m;
+}
+
+// ---------- the land ----------
+const land = new THREE.Group();
+scene.add(land);
+const edgeR = (a) => ISLAND_R * (1 + 0.04 * Math.sin(3 * a + 1.3) + 0.025 * Math.sin(5 * a + 0.4) + 0.012 * Math.sin(11 * a));
+const groundAt = (x, z) => 0.06 * (fbm(x * 0.3 + 4, z * 0.3 + 9) - 0.5);
+
+function buildIsland() {
+  const N = 180, TOP = 30;
+  const P = [], C = [], I = [];
+  const c = new THREE.Color();
+  const grass = ['#a3d18b', '#86c27c', '#bddf9f'].map((h) => new THREE.Color(h)); // soft sage, so the lime of Moss still pops
+  const dirt = ['#c99462', '#a8744b'].map((h) => new THREE.Color(h));
+  const rock = new THREE.Color('#7f7068');
+  const vert = (x, y, z, a) => {
+    const lip = -0.05 - 0.16 * noise2(a * 7, 1.7); // grass spills unevenly over the edge
+    if (y > lip) {
+      c.copy(grass[0]).lerp(grass[1], smooth(0.35, 0.68, fbm(x * 0.45, z * 0.45)));
+      c.lerp(grass[2], 0.55 * smooth(0.55, 0.8, fbm(x * 1.2 + 2, z * 1.2)));
+    } else if (y > -1.2) c.copy(dirt[0]).lerp(dirt[1], 0.5 + 0.5 * Math.sin(y * 13 + noise2(a * 4, y * 3) * 3));
+    else c.copy(dirt[1]).lerp(rock, smooth(-1.2, -3.2, y));
+    P.push(x, y, z); C.push(c.r, c.g, c.b);
+    return P.length / 3 - 1;
+  };
+  const prof = [];
+  for (let k = 1; k <= TOP; k++) prof.push((a, R) => [(R - 0.35) * k / TOP, null]);
+  for (let j = 1; j <= 6; j++) { const t = j / 6 * Math.PI / 2; prof.push((a, R) => [R - 0.35 + 0.35 * Math.sin(t), -0.35 * (1 - Math.cos(t))]); }
+  for (let j = 1; j <= 4; j++) prof.push((a, R) => [R + 0.04 * Math.sin(j * 1.3 + a * 5), -0.35 - j * 0.22]);
+  for (let j = 1; j <= 10; j++) { const u = j / 11; prof.push((a, R) => [R * Math.pow(1 - u, 1.2) * (0.88 + 0.24 * noise2(a * 2.5, j * 0.8)), -1.25 - u * 3.4]); }
+  const center = vert(0, groundAt(0, 0), 0, 0);
+  const rings = prof.map((f) => {
+    const ring = [];
+    for (let i = 0; i < N; i++) {
+      const a = i / N * Math.PI * 2, [r, y] = f(a, edgeR(a));
+      const x = Math.cos(a) * r, z = Math.sin(a) * r;
+      ring.push(vert(x, y === null ? groundAt(x, z) : y, z, a));
+    }
+    return ring;
+  });
+  const tip = vert(0, -5.2, 0, 0);
+  for (let i = 0; i < N; i++) {
+    const j = (i + 1) % N;
+    I.push(center, rings[0][j], rings[0][i]);
+    for (let k = 0; k < rings.length - 1; k++) {
+      const lo = rings[k], hi = rings[k + 1];
+      I.push(lo[i], hi[j], hi[i], lo[i], lo[j], hi[j]);
+    }
+    const last = rings[rings.length - 1];
+    I.push(last[i], last[j], tip);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+  g.setIndex(I);
+  g.computeVertexNormals();
+  const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }));
+  m.receiveShadow = true;
+  land.add(m);
+}
+buildIsland();
+
+const AGENT_COLORS = { blue: '#2f6dff', green: '#8fdc2a', yellow: '#ffc21f', pink: '#ff47b0' };
+const world = new World3D({ land, groundAt, agentColors: AGENT_COLORS });
+
+// grass and flowers everywhere nothing else will ever stand
+const reserved = [
+  ...Object.entries(PLOTS).filter(([k]) => k !== 'road').map(([k, [x, z]]) => ({ x, z, r: (SIZE[k] || 1.5) / 2 + 0.3 })),
+  ...HOME_PLOTS.map(([x, z]) => ({ x, z, r: 1.2 })),
+  ...world.obstacles.map((o) => ({ x: o.x, z: o.z, r: o.r + 0.25 })),
+  { x: ZONES.ore[0], z: ZONES.ore[1], r: 1.1 },
+];
+function scatter(n, pad) {
+  const out = [];
+  for (let tries = 0; out.length < n && tries < n * 40; tries++) {
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * (edgeR(a) - 0.45);
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (reserved.some((o) => Math.hypot(o.x - x, o.z - z) < o.r + pad)) continue;
+    out.push([x, z]);
+  }
+  return out;
+}
+{
+  const blade = (i) => {
+    const g = new THREE.ConeGeometry(0.022, 0.17, 3, 1);
+    g.translate(0, 0.085, 0); g.rotateZ(rand(0.15, 0.45)); g.rotateY(i * 1.26 + rand(-0.2, 0.2));
+    return g;
+  };
+  const tuft = mergeGeometries([0, 1, 2, 3, 4].map(blade));
+  const spots = scatter(420, 0.05);
+  const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...o });
+  const im = new THREE.InstancedMesh(tuft, std('#ffffff'), spots.length);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), s = V3(), col = new THREE.Color();
+  spots.forEach(([x, z], i) => {
+    const k = rand(0.6, 1.35);
+    m.compose(V3(x, groundAt(x, z) - 0.01, z), q.setFromAxisAngle(V3(0, 1, 0), rand(0, 7)), s.set(k, k * rand(0.8, 1.2), k));
+    im.setMatrixAt(i, m);
+    im.setColorAt(i, col.set(pick(['#76b066', '#88bf74', '#6aa35f', '#9acb82'])));
+  });
+  im.receiveShadow = true;
+  land.add(im);
+  const flowers = scatter(40, 0.2);
+  const heads = new THREE.InstancedMesh(new THREE.SphereGeometry(0.04, 12, 8), std('#ffffff', { roughness: 0.5 }), flowers.length);
+  const stems = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.006, 0.008, 0.14, 5).translate(0, 0.07, 0), std('#5aa845'), flowers.length);
+  flowers.forEach(([x, z], i) => {
+    const y = groundAt(x, z);
+    stems.setMatrixAt(i, m.makeTranslation(x, y, z));
+    heads.setMatrixAt(i, m.compose(V3(x, y + 0.15, z), q.identity(), s.set(1, 0.7, 1)));
+    heads.setColorAt(i, col.set(pick(['#ffffff', '#fff27a', '#ffb3d9', '#ffffff', '#c9b8ff'])));
+  });
+  land.add(heads, stems);
+}
+// clouds drifting around (and under) the island
+const clouds = new THREE.Group();
+land.add(clouds);
+const cloudMat = new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 1, emissive: '#eef7ff', emissiveIntensity: 0.35 });
+{
+  const ball = new THREE.SphereGeometry(1, 20, 14);
+  for (let i = 0; i < 12; i++) {
+    const c = new THREE.Group();
+    const n = 4 + Math.floor(Math.random() * 3);
+    for (let k = 0; k < n; k++) {
+      const s = k === 0 ? 1 : rand(0.55, 0.85);
+      const b = new THREE.Mesh(ball, cloudMat);
+      b.position.set((k - n / 2) * 0.75 + rand(-0.2, 0.2), (k === 0 ? 0.25 : 0) + rand(-0.1, 0.2), rand(-0.3, 0.3));
+      b.scale.set(s, s * 0.8, s);
+      c.add(b);
+    }
+    const a = i / 12 * Math.PI * 2 + rand(-0.2, 0.2), r = rand(15, 26);
+    c.position.set(Math.cos(a) * r, rand(-7, 2.5), Math.sin(a) * r);
+    c.scale.setScalar(rand(0.9, 1.8));
+    c.lookAt(0, c.position.y, 0);
+    clouds.add(c);
+  }
+}
+
+// sky dome + stars + rain: the clock and the weather are visible
+const skyU = { top: { value: new THREE.Color() }, mid: { value: new THREE.Color() }, bot: { value: new THREE.Color() } };
+const sky = new THREE.Mesh(new THREE.SphereGeometry(150, 32, 16), new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite: false, fog: false, uniforms: skyU,
+  vertexShader: 'varying vec3 vP; void main() { vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform vec3 top; uniform vec3 mid; uniform vec3 bot; varying vec3 vP;
+    void main() { float h = vP.y; vec3 c = h > 0.0 ? mix(mid, top, pow(smoothstep(0.0, 0.65, h), 0.8)) : mix(mid, bot, smoothstep(0.0, -0.45, h));
+      gl_FragColor = vec4(c, 1.0);
+      #include <colorspace_fragment>
+    }`,
+}));
+sky.userData.noAO = true;
+sky.renderOrder = -1;
+scene.add(sky);
+const stars = (() => {
+  const p = [];
+  for (let i = 0; i < 500; i++) { const a = Math.random() * Math.PI * 2, y = Math.random() * 0.9 + 0.08, r = Math.sqrt(1 - y * y); p.push(Math.cos(a) * r * 140, y * 140, Math.sin(a) * r * 140); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: '#ffffff', size: 1.6, sizeAttenuation: false, transparent: true, opacity: 0, fog: false, depthWrite: false }));
+  scene.add(pts);
+  return pts;
+})();
+const rain = (() => {
+  const n = 900, p = new Float32Array(n * 6);
+  for (let i = 0; i < n; i++) { const a = Math.random() * 6.3, r = Math.sqrt(Math.random()) * 13, x = Math.cos(a) * r, z = Math.sin(a) * r, y = Math.random() * 14; p.set([x, y, z, x - 0.04, y - 0.45, z], i * 6); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const l = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: '#cfe3ff', transparent: true, opacity: 0 }));
+  l.frustumCulled = false; l.visible = false;
+  land.add(l);
+  return { l, p, t: 0 };
+})();
+
+const SKY = [ // hour, top, horizon, below
+  [0, '#0b1030', '#26305c', '#2d2650'], [5, '#1b2350', '#4a4f86', '#5a4a7a'], [6.5, '#6fa6e8', '#ffd2b4', '#f7c6d9'],
+  [9, '#5fb2f5', '#d9f1ff', '#fde9f3'], [17, '#5fb2f5', '#d9f1ff', '#fde9f3'], [19.5, '#4a5ca8', '#ffb38a', '#f7a8c4'],
+  [21, '#1b2350', '#3f4680', '#4a3f6e'], [24, '#0b1030', '#26305c', '#2d2650'],
+].map(([h, ...c]) => [h, ...c.map((x) => new THREE.Color(x))]);
+const hemiDay = new THREE.Color('#e4f4ff'), hemiNight = new THREE.Color('#7d8cc9'), groundDay = new THREE.Color('#9cc27c'), groundNight = new THREE.Color('#3d4a6b');
+const sunWarm = new THREE.Color('#ffbf86'), sunDay = new THREE.Color('#fff2dc');
+function updateSky(S, dt) {
+  const h = hourOf(S);
+  let k = 0;
+  while (k < SKY.length - 2 && SKY[k + 1][0] <= h) k++;
+  const [h0, ...c0] = SKY[k], [h1, ...c1] = SKY[k + 1];
+  const f = clamp((h - h0) / (h1 - h0), 0, 1);
+  skyU.top.value.copy(c0[0]).lerp(c1[0], f);
+  skyU.mid.value.copy(c0[1]).lerp(c1[1], f);
+  skyU.bot.value.copy(c0[2]).lerp(c1[2], f);
+  const L = smooth(5.4, 7.4, h) * (1 - smooth(18.6, 20.9, h)); // daylight 0..1
+  const ang = ((h - 6) / 14) * Math.PI;
+  sun.position.set(Math.cos(ang) * -11, Math.max(2, Math.sin(Math.max(0.15, Math.min(Math.PI - 0.15, ang))) * 13), 6);
+  sun.intensity = 2.5 * L;
+  sun.color.copy(sunWarm).lerp(sunDay, smooth(0.2, 0.8, Math.sin(clamp(ang, 0, Math.PI))));
+  hemi.intensity = 0.42 + 0.78 * L;
+  hemi.color.copy(hemiNight).lerp(hemiDay, L);
+  hemi.groundColor.copy(groundNight).lerp(groundDay, L);
+  scene.environmentIntensity = 0.18 + 0.34 * L;
+  scene.fog.color.copy(skyU.mid.value);
+  cloudMat.color.setScalar(0.35 + 0.65 * L);
+  cloudMat.emissiveIntensity = 0.1 + 0.25 * L;
+  stars.material.opacity = 1 - L;
+  world.night = 1 - L;
+  renderer.toneMappingExposure = 1 + 0.18 * (1 - L);
+  // storms
+  const storming = S.time < (S.stormUntil || 0);
+  rain.t = damp(rain.t, storming ? 1 : 0, 1.5, dt);
+  rain.l.visible = rain.t > 0.02;
+  rain.l.material.opacity = 0.55 * rain.t;
+  if (rain.l.visible) {
+    const p = rain.l.geometry.attributes.position;
+    for (let i = 0; i < p.count; i += 2) {
+      let y = p.getY(i) - dt * 14;
+      if (y < -0.2) y += 14;
+      p.setY(i, y); p.setY(i + 1, y - 0.45);
+    }
+    p.needsUpdate = true;
+  }
+}
+
+// ---------- the lineup stage ----------
+const studio = new THREE.Group();
+studio.visible = false;
+scene.add(studio);
+// A warm toy-photography studio: a seamless cream backdrop that curves into the floor, soft shadows,
+// and a pastel puck under each dot. (No mirror floor: drawing the fur twice is what made this view heavy.)
+const STAGE_BG = '#f1e5d8';
+const PUCK_TOP = 0.045;
+const LINEUP = { Nimbus: [-1.5, 0], Moss: [-0.5, 0.1], Sol: [0.42, 0.1], Rosie: [1.42, 0] };
+{
+  // the cyclorama: floor, a smooth curve, then a wall - one surface, so there's no horizon line
+  const prof = [];
+  for (let i = 0; i <= 8; i++) prof.push([14 - i * 2.5, 0]);                                         // floor, front to back
+  for (let i = 1; i <= 16; i++) { const t = i / 16 * Math.PI / 2; prof.push([-6 - Math.sin(t) * 3.5, 3.5 - Math.cos(t) * 3.5]); } // the curve
+  for (let i = 1; i <= 4; i++) prof.push([-9.5, 3.5 + i * 3]);                                        // the wall
+  const P = [], I = [];
+  for (const [z, y] of prof) P.push(-18, y, z, 18, y, z);
+  for (let i = 0; i < prof.length - 1; i++) { const a = i * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  g.setIndex(I);
+  g.computeVertexNormals();
+  const cyc = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: STAGE_BG, roughness: 1, side: THREE.DoubleSide }));
+  cyc.receiveShadow = true;
+  studio.add(cyc);
+  // a pastel puck for each of them to stand on
+  const RAD = { Nimbus: 0.55, Moss: 0.39, Sol: 0.47, Rosie: 0.47 };
+  const COL = { Nimbus: '#2f6dff', Moss: '#8fdc2a', Sol: '#ffc21f', Rosie: '#ff47b0' };
+  for (const [name, [x, z]] of Object.entries(LINEUP)) {
+    const r = RAD[name];
+    const pts = [[0, 0], [r, 0], [r + 0.012, 0.008], [r + 0.016, PUCK_TOP * 0.5], [r + 0.01, PUCK_TOP - 0.006], [r - 0.004, PUCK_TOP], [0, PUCK_TOP]].map(([a, b]) => new THREE.Vector2(a, b));
+    const puck = new THREE.Mesh(new THREE.LatheGeometry(pts, 64), new THREE.MeshStandardMaterial({ color: new THREE.Color(COL[name]).lerp(new THREE.Color('#ffffff'), 0.62), roughness: 0.55 }));
+    puck.position.set(x, 0, z);
+    puck.castShadow = true; puck.receiveShadow = true;
+    studio.add(puck);
+  }
+}
+
+// ---------- the simulation (the engine owns reality; everything above and below is a view of it) ----------
+// LIVE: served by server/server.js, there is exactly one world. The server runs it; this page
+// gets a snapshot, then a frame whenever the world changes, and only draws what it is told.
+// Opened any other way (a plain static server), it falls back to a private world in this browser.
+function connectLive() {
+  return new Promise((resolve) => {
+    let es;
+    try { es = new EventSource('live'); } catch { resolve(null); return; }
+    const fail = () => { es.close(); resolve(null); };
+    const timer = setTimeout(fail, 3000);
+    es.onerror = () => { clearTimeout(timer); fail(); };
+    es.addEventListener('snapshot', (e) => { clearTimeout(timer); es.onerror = null; resolve({ es, state: JSON.parse(e.data) }); }, { once: true });
+  });
+}
+// On the public site (Firebase Hosting) the laptop's world arrives through Firebase instead:
+// the laptop writes it there and this page reads it, so nobody ever connects to the laptop itself.
+const FB_VERSION = '11.0.2';
+const ON_LAPTOP = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+let fbConfig = null;
+if (!ON_LAPTOP) try { fbConfig = (await import('./firebase-config.js')).default; } catch { /* not deployed with Firebase */ }
+const listKeys = (o) => Object.keys(o || {}).sort();
+function assembleWorld(w) {
+  const logs = (k) => listKeys(w.logs?.[k]).map((key) => JSON.parse(w.logs[k][key]));
+  const lists = (k) => listKeys(w.lists?.[k]).flatMap((key) => JSON.parse(w.lists[k][key]));
+  const core = JSON.parse(w.core);
+  return {
+    ...core,
+    agents: Object.fromEntries(Object.entries(w.agents || {}).map(([k, v]) => [k, JSON.parse(v)])),
+    proposals: lists('proposals'), disputes: lists('disputes'), decisions: lists('decisions'),
+    history: logs('history'), feed: logs('feed'), engineLog: logs('engineLog'), journal: logs('journal'), days: logs('days'),
+    economy: { ...core.economy, transactions: logs('transactions') },
+    live: w.live,
+  };
+}
+async function connectFirebase(cfg) {
+  const [{ initializeApp }, D] = await Promise.all([
+    import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-app.js`),
+    import(`https://www.gstatic.com/firebasejs/${FB_VERSION}/firebase-database.js`),
+  ]);
+  const db = D.getDatabase(initializeApp(cfg));
+  const snap = await D.get(D.ref(db, 'world'));
+  if (!snap.exists() || !snap.val().core) { // the server has never published yet: wait for it
+    document.getElementById('loading').textContent = 'The world has not started yet. This page will open when it does.';
+    D.onValue(D.ref(db, 'world/core'), (s) => { if (s.exists()) location.reload(); });
+    await new Promise(() => {});
+  }
+  return { kind: 'firebase', D, db, state: assembleWorld(snap.val()) };
+}
+const live = fbConfig ? await connectFirebase(fbConfig) : await connectLive();
+const LIVE = !!live;
+const FIREBASE = live?.kind === 'firebase';
+document.getElementById('liveBadge').textContent = LIVE ? 'LIVE' : 'PREVIEW';
+document.getElementById('liveBadge').classList.toggle('off', !LIVE);
+
+// One pace for everyone: nobody watching can speed it up or pause it. In a private preview,
+// ?dev adds speed controls and a reset button for building.
+const DEV = new URLSearchParams(location.search).has('dev');
+document.body.classList.toggle('dev', DEV && !LIVE);
+const SPEEDS = [0, 1, 10, 40, 160];
+const RATE = DAY / 3600;     // simulated minutes per real second in a preview: one day per hour, like the live server
+let S = LIVE ? live.state : space.load();
+if (!S || S.v !== 1) S = E.createWorld();
+let speed = 1;
+if (DEV && !LIVE) try { speed = clamp(+(localStorage.getItem('dothome.speed') ?? 1), 0, SPEEDS.length - 1); } catch { /* no storage */ }
+let awayNote = null;
+if (!LIVE && S.savedAt) { // catch up on what happened while nobody was watching (capped at a day)
+  const minutes = Math.min((Date.now() - S.savedAt) / 1000 * RATE, DAY);
+  if (minutes > 30) {
+    const d0 = dayOf(S);
+    E.step(S, minutes);
+    const ms = E.drain(S).filter((ev) => ev.type === 'history' && ev.e.kind === 'milestone');
+    awayNote = `While you were away: Day ${d0} → Day ${dayOf(S)}${ms.length ? `. ${ms[ms.length - 1].e.text}` : ''}`;
+  }
+}
+E.drain(S);
+
+// ---------- the agents (modelled in Blender: blender/build_agents.py) ----------
+// the model is Draco-compressed (~300 KB instead of ~2 MB); the decoder comes from the same CDN as three.js
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+const LIB = (await new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/agents.glb')).scene;
+document.getElementById('loading').remove();
+
+const CFG = {
+  Nimbus: { id: 'blue', fur: '#2f6dff', hop: { h: 0.16, dur: 0.62, len: 0.42 } },
+  Moss: { id: 'green', fur: '#8fdc2a', hop: { h: 0.23, dur: 0.42, len: 0.4 } },
+  Sol: { id: 'yellow', fur: '#ffc21f', hop: { h: 0.1, dur: 0.46, len: 0.3 } },
+  Rosie: { id: 'pink', fur: '#ff47b0', hop: { h: 0.14, dur: 0.46, len: 0.36 } },
+};
+// how each kind of work looks once they're standing at the job
+const WORK = {
+  GATHER_WOOD: 'chop', QUARRY_STONE: 'smash', MINE_ORE: 'smash', FORAGE_FOOD: 'pick', TEND_FARM: 'pick', FETCH_WATER: 'dip',
+  START: 'build', CONTINUE: 'build', CRAFT_TOOLS: 'build', EAT: 'munch', REST: 'rest', SLEEP: 'sleep',
+  SOCIALIZE: 'talk', TEACH: 'talk', TRADE: 'talk', CARE: 'talk', PROPOSE: 'talk', MEDIATE: 'talk', RUN_SHOP: 'talk', SCOUT: 'look', PATROL: 'look',
+};
+
+const glossyBlack = new THREE.MeshPhysicalMaterial({ color: '#07070a', roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.04 });
+const eyeWhite = new THREE.MeshPhysicalMaterial({ color: '#fbfaf3', roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.08 });
+const frameMat = new THREE.MeshPhysicalMaterial({ color: '#111116', roughness: 0.3, clearcoat: 0.6 });
+const shadowTex = canvasTex(128, 128, (c, W) => {
+  const g = c.createRadialGradient(W / 2, W / 2, 0, W / 2, W / 2, W / 2);
+  g.addColorStop(0, 'rgba(10,20,30,.55)'); g.addColorStop(0.55, 'rgba(10,20,30,.25)'); g.addColorStop(1, 'rgba(10,20,30,0)');
+  c.fillStyle = g; c.fillRect(0, 0, W, W);
+});
+
+let mode = 'land';
+const agents = [];
+const byId = {};
+const pickables = [];
+const hopBoost = () => [1, 1, 1.3, 1.8, 2.3][speed];
+
+class Agent {
+  constructor(name) {
+    const cfg = CFG[name];
+    this.name = name; this.cfg = cfg; this.id = cfg.id; this.idx = ['blue', 'green', 'yellow', 'pink'].indexOf(cfg.id);
+    this.seed = Math.random() * 100;
+    this.u = { shellN: { value: FUR.shells }, push: { value: V3() }, bald: { value: [new THREE.Vector4(), new THREE.Vector4()] } };
+
+    // rig: root (place + yaw) > air (hop height) > squash (pivot at the sole) > lean > model
+    this.root = new THREE.Group();
+    this.air = new THREE.Group(); this.root.add(this.air);
+    this.sqG = new THREE.Group(); this.air.add(this.sqG);
+    this.leanG = new THREE.Group(); this.sqG.add(this.leanG);
+    const model = LIB.getObjectByName(name).clone(true);
+    model.position.set(0, 0, 0);
+    this.leanG.add(model);
+    const part = (n) => model.getObjectByName(`${name}_${n}`);
+
+    const meshes = [];
+    model.traverse((o) => {
+      o.userData.base = { p: o.position.clone(), s: o.scale.clone() }; // multi-material parts load as Groups
+      if (o.isMesh) meshes.push(o);
+    });
+    this.shells = [];
+    for (const o of meshes) {
+      o.castShadow = true; o.receiveShadow = true;
+      o.userData.agent = this; pickables.push(o);
+      const mn = o.material.name;
+      if (o.name === `${name}_Body`) this.fur(o, cfg.fur);
+      else if (o.name.includes('Fuzz')) this.fur(o, '#1b1b22', { len: 0.8, sheen: 0.1, bald: false });
+      else if (mn === 'EyeBead' || mn === 'ShadeLens') o.material = glossyBlack;
+      else if (mn === 'EyeWhite') o.material = eyeWhite;
+      else if (mn === 'Frame') o.material = frameMat;
+    }
+    this.eyes = ['Eye_L', 'Eye_R', 'EyeOpen_L', 'EyeOpen_R'].map(part).filter(Boolean);
+    this.whites = ['EyeWhite_L', 'EyeWhite_R', 'Pupil_L', 'Pupil_R'].map(part).filter(Boolean);
+    this.pupils = ['Pupil_L', 'Pupil_R'].map(part).filter(Boolean);
+    this.closed = ['EyeClosed_L', 'EyeClosed_R'].map(part).filter(Boolean);
+    this.open = ['EyeOpen_L', 'EyeOpen_R'].map(part).filter(Boolean);
+    this.open.forEach((o) => (o.visible = false));
+    const baldAt = { Nimbus: [['Eye_L', 'Eye_R'], 0.05], Sol: [['EyeOpen_L', 'EyeOpen_R'], 0.05] }[name];
+    if (baldAt) baldAt[0].forEach((n, i) => this.u.bald.value[i].set(...part(n).position.toArray(), baldAt[1]));
+    this.beret = part('Beret_Fuzz');
+    this.shades = part('Shades');
+    this.glasses = part('Glasses');
+
+    const box = new THREE.Box3().setFromObject(model);
+    this.height = box.max.y;
+    this.rad = Math.max(box.max.x - box.min.x, box.max.z - box.min.z) / 2 + FUR.len;
+
+    this.shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 }));
+    this.shadow.rotation.x = -Math.PI / 2;
+    this.shadow.userData.noAO = true;
+    this.shadowSX = (box.max.x - box.min.x) * 1.25;
+    this.shadow.scale.set(this.shadowSX, (box.max.z - box.min.z) * 1.4, 1);
+    this.root.add(this.shadow);
+
+    // name tag + speech bubble
+    const el = document.createElement('div');
+    el.className = 'tag';
+    el.style.setProperty('--c', cfg.fur);
+    el.innerHTML = `<div class="bubble"></div><div class="nm"><i></i>${name}<span class="act"></span></div>`;
+    this.bubbleEl = el.querySelector('.bubble');
+    this.actEl = el.querySelector('.act');
+    el.addEventListener('click', (e) => { e.stopPropagation(); focusAgent(this); });
+    this.tag = new CSS2DObject(el);
+    this.tag.center.set(0.5, 1);
+    this.tag.position.y = this.height + 0.2;
+    this.root.add(this.tag);
+
+    // motion + expression state
+    this.yawT = 0; this.hop = null;
+    this.sq = 0; this.sqV = 0; this.lean = 0;
+    this.prev = V3(); this.vel = V3();
+    this.blinkT = rand(1, 4); this.blinkP = 0; this.blink = 0; this.eyesClosed = 0;
+    this.reactT = 0; this.talkT = 0; this.bubbleT = 0; this.queue = []; this.lastIcon = '';
+    this.idleT = rand(2, 6); this.beat = -1; this.inside = false; this.arrived = false;
+    this.bw = { x: 0, z: 0, vx: 0, vz: 0 };
+    this.eye = { x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, t: 0 };
+    this.peek = 0; this.peekT = rand(6, 12); this.surprise = 0;
+
+    scene.add(this.root);
+    agents.push(this);
+    byId[this.id] = this;
+  }
+
+  get sim() { return S.agents[this.id]; }
+
+  fur(mesh, color, opts = {}) {
+    mesh.material = furMaterial(color, this, opts);
+    const shells = new THREE.InstancedMesh(mesh.geometry, furMaterial(color, this, { ...opts, shell: true }), FUR.shells);
+    shells.userData.noAO = true;
+    shells.frustumCulled = false;
+    shells.receiveShadow = true;
+    shells.raycast = () => {};
+    mesh.add(shells);
+    this.shells.push(shells);
+  }
+
+  floorY(x, z) { return mode === 'land' ? groundAt(x, z) : PUCK_TOP; }
+
+  say(text) {
+    this.queue.push(text);
+    if (this.queue.length > 3) this.queue.shift(); // at high speed, skip to the latest lines
+  }
+
+  startHop(x, z, scale = 1) {
+    const h = this.cfg.hop, k = hopBoost();
+    this.hop = { t: 0, dur: (h.dur * (0.85 + 0.3 * scale) / 1.15) / k, h: h.h * scale, from: this.root.position.clone(), to: V3(x, 0, z) };
+  }
+  bounce(scale = 1) { if (!this.hop) this.startHop(this.root.position.x, this.root.position.z, scale); }
+
+  faceYaw(x, z) { const p = this.root.position; return Math.atan2(x - p.x, z - p.z); }
+  faceCamera() { this.yawT = this.faceYaw(camera.position.x, camera.position.z); }
+
+  landed() {
+    this.sqV += 2.6 * (this.hop.h / 0.15);
+    this.bw.vx += rand(-3, 3); this.bw.vz += rand(-4, 4) - 3;
+    this.eye.vx += rand(-9, 9); this.eye.vy += rand(-9, 9);
+  }
+
+  // signature moves: on click, and now and then on their own
+  quirk(big = false) {
+    if (this.name === 'Nimbus') { this.bw.vz += big ? 14 : 8; this.bounce(big ? 1.4 : 0.9); }
+    if (this.name === 'Moss') { this.bounce(big ? 1.9 : 1.1); this.eye.vx += 30; this.eye.vy -= 20; }
+    if (this.name === 'Sol') { this.surprise = big ? 1.6 : 1.1; this.sqV -= 2.5; }
+    if (this.name === 'Rosie') { this.peek = 0.001; this.peekT = big ? 1.9 : 1.4; }
+  }
+
+  react() {
+    this.reactT = 2.4;
+    this.faceCamera();
+    this.quirk(true);
+    this.queue = [{ Nimbus: '👋', Moss: '❗', Sol: '👋', Rosie: '😉' }[this.name]];
+    this.bubbleT = 0;
+  }
+
+  // where the simulation says this agent should be, and what it should look at
+  spot() {
+    const t = this.sim.task;
+    if (!t) return this.lastSpot || null;
+    if (t.zone === 'partner' || t.zone === 'patient') {
+      const other = byId[t.target];
+      if (!other) return null;
+      const op = other.root.position, p = this.root.position;
+      if (t.partner) return { x: p.x, z: p.z, fx: op.x, fz: op.z, stay: true };
+      const dx = p.x - op.x, dz = p.z - op.z, d = Math.hypot(dx, dz) || 1;
+      const gap = (this.rad + other.rad) * 0.75 + 0.15;
+      return { x: op.x + dx / d * gap, z: op.z + dz / d * gap, fx: op.x, fz: op.z };
+    }
+    if (t.zone === 'patrol') return world.workSpot(S, 'patrol', this.idx, t);
+    const key = t.start + t.type + (t.target ?? '');
+    if (this.spotKey !== key) {
+      this.spotKey = key;
+      this.lastSpot = world.workSpot(S, t.zone, this.idx, { ...t, who: this.id });
+    }
+    return this.lastSpot;
+  }
+
+  // one hop towards the spot, steering around anything solid in the way
+  stepToward(spot, d) {
+    const pos = this.root.position;
+    const len = Math.min(d, this.cfg.hop.len * hopBoost() * (this.sim.ailment ? 0.6 : 1));
+    let dx = (spot.x - pos.x) / d, dz = (spot.z - pos.z) / d;
+    for (const o of world.obstacles) {
+      if (o.building && this.sim.task?.target === o.building) continue;
+      if (o.soft && Math.hypot(spot.x - o.x, spot.z - o.z) < 1.6) continue;
+      const min = o.r + this.rad * 0.6;
+      const nx = pos.x + dx * len, nz = pos.z + dz * len;
+      if (Math.hypot(nx - o.x, nz - o.z) < min && Math.hypot(spot.x - o.x, spot.z - o.z) > min) {
+        let tx = -(pos.z - o.z), tz = pos.x - o.x;
+        const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
+        if (tx * dx + tz * dz < 0) { tx = -tx; tz = -tz; }
+        const ol = Math.hypot(pos.x - o.x, pos.z - o.z) || 1;
+        dx = tx * 0.85 + (pos.x - o.x) / ol * 0.35; dz = tz * 0.85 + (pos.z - o.z) / ol * 0.35;
+        const l = Math.hypot(dx, dz); dx /= l; dz /= l;
+        break;
+      }
+    }
+    this.yawT = Math.atan2(dx, dz);
+    this.startHop(pos.x + dx * len, pos.z + dz * len);
+  }
+
+  placeAtTask() {
+    const sp = this.spot();
+    const [x, z] = sp ? [sp.x, sp.z] : LINEUP[this.name];
+    this.root.position.set(x, this.floorY(x, z), z);
+    this.prev.copy(this.root.position);
+    this.hop = null;
+  }
+
+  update(dt, t) {
+    const a = this.sim, task = a.task, pos = this.root.position;
+    let airY = 0, lean = 0, work = null;
+    let sqT = 0.014 * Math.sin(t * 2.3 + this.seed); // breathing
+    this.eyesClosed = 0;
+
+    if (mode === 'lineup') {
+      if (this.reactT > 0) { this.reactT -= dt; this.faceCamera(); }
+      else {
+        this.idleT -= dt;
+        if (this.idleT <= 0) { this.idleT = rand(3.5, 9); Math.random() < 0.55 ? this.quirk() : this.bounce(0.8); this.yawT = rand(-0.5, 0.5); }
+      }
+      this.inside = false;
+    } else {
+      const sp = this.spot();
+      if (this.reactT > 0) { this.reactT -= dt; this.faceCamera(); }
+      if (sp && !this.hop) {
+        const dx = sp.x - pos.x, dz = sp.z - pos.z, d = Math.hypot(dx, dz);
+        if (d > 0.1 && !sp.stay) {
+          this.arrived = false;
+          this.inside = false;
+          const want = Math.atan2(dx, dz);
+          if (this.reactT <= 0) this.yawT = want;
+          if (Math.abs(angDiff(this.root.rotation.y, want)) < 0.6 || this.reactT > 0) this.stepToward(sp, d);
+        } else {
+          this.arrived = true;
+          if (sp.fx != null && this.reactT <= 0) this.yawT = this.faceYaw(sp.fx, sp.fz);
+        }
+      }
+      if (this.arrived && task) work = WORK[task.type];
+      // sleeping indoors: hop in through the door and disappear until morning
+      this.inside = work === 'sleep' && !!sp?.door;
+    }
+    this.root.visible = !this.inside;
+
+    if (this.hop) {
+      const h = this.hop, C = 0.2;
+      h.t += dt;
+      const u = h.t / h.dur;
+      if (u < C) sqT += 0.2 * Math.sin(Math.PI * u / C);           // crouch
+      else if (u < 1) {                                               // airborne
+        const v = (u - C) / (1 - C), e = v * v * (3 - 2 * v);
+        airY = h.h * 4 * v * (1 - v);
+        pos.x = h.from.x + (h.to.x - h.from.x) * e;
+        pos.z = h.from.z + (h.to.z - h.from.z) * e;
+        sqT -= 0.14 * Math.sin(Math.PI * v);
+        lean = (h.to.distanceTo(h.from) > 0.05 ? 0.16 : 0) * Math.sin(Math.PI * v);
+      } else {
+        pos.x = h.to.x; pos.z = h.to.z;
+        this.landed();
+        this.hop = null;
+      }
+    }
+
+    // what the work looks like
+    if (work && !this.hop) {
+      const beat = (period) => { const b = Math.floor((t + this.seed) / period); if (b !== this.beat) { this.beat = b; return true; } return false; };
+      switch (work) {
+        case 'chop': lean = 0.24 * Math.pow(Math.max(0, Math.sin(t * 6 + this.seed)), 3); if (beat(Math.PI / 3)) this.sqV += 1.2; break;
+        case 'smash': lean = 0.12; if (beat(0.95)) this.sqV += 2.4; break;
+        case 'pick': sqT += 0.05 * Math.sin(t * 9); lean = 0.14; break;
+        case 'dip': lean = 0.3; sqT += 0.04; break;
+        case 'build': lean = 0.08; if (beat(1.15)) this.bounce(0.4); break;
+        case 'munch': sqT += 0.06 * Math.sin(t * 18); break;
+        case 'rest': sqT += 0.1; this.eyesClosed = 0.55; break;
+        case 'sleep': sqT += 0.16; this.eyesClosed = 1; if (beat(3.2) && !this.queue.length && this.bubbleT <= 0) this.say('💤'); break;
+        case 'look': this.yawT += Math.sin(t * 0.9 + this.seed) * dt * 1.2; break;
+      }
+    }
+    pos.y = this.floorY(pos.x, pos.z);
+    this.air.position.y = airY;
+    this.root.rotation.y += angDiff(this.root.rotation.y, this.yawT) * (1 - Math.exp(-(this.name === 'Moss' ? 12 : 8) * dt));
+
+    // squash & stretch on a spring, so landings jiggle
+    if (this.talkT > 0) { this.talkT -= dt; sqT += 0.05 * Math.sin(t * 24) * (this.talkT / 0.5); }
+    this.sqV += (-(this.sq - sqT) * 330 - this.sqV * 15) * dt;
+    this.sq += this.sqV * dt;
+    const s = clamp(this.sq, -0.3, 0.42);
+    this.sqG.scale.set(1 + s * 0.55, 1 - s, 1 + s * 0.55);
+    this.lean = damp(this.lean, lean, 10, dt);
+    this.leanG.rotation.x = this.lean;
+    this.leanG.rotation.z = Math.sin(t * 1.1 + this.seed) * 0.02;
+
+    // fur tips trail behind the motion
+    tmpV.set(pos.x, pos.y + airY, pos.z);
+    this.vel.subVectors(tmpV, this.prev).divideScalar(Math.max(dt, 1e-3));
+    this.prev.copy(tmpV);
+    tmpV.copy(this.vel).multiplyScalar(-0.012).applyAxisAngle(THREE.Object3D.DEFAULT_UP, -this.root.rotation.y);
+    tmpV.y -= this.sqV * 0.004;
+    tmpV.clampLength(0, 0.03);
+    this.u.push.value.lerp(tmpV, 1 - Math.exp(-12 * dt));
+
+    // blink (or keep the eyes shut when resting / asleep)
+    this.blinkT -= dt;
+    if (this.blinkT <= 0) { this.blinkP = 0.13; this.blinkT = Math.random() < 0.2 ? 0.28 : rand(2, 5.5); }
+    this.blinkP -= dt;
+    this.blink = damp(this.blink, Math.max(this.blinkP > 0 ? 1 : 0, this.eyesClosed), 30, dt);
+    for (const e of this.eyes) e.scale.y = e.userData.base.s.y * (1 - 0.92 * this.blink);
+    for (const e of this.whites) e.scale.y = e.userData.base.s.y * (1 - 0.8 * this.blink);
+
+    // Nimbus: floppy beret
+    if (this.beret) {
+      const b = this.bw;
+      b.vx += (-b.x * 140 - b.vx * 6) * dt - this.sqV * dt * 3;
+      b.vz += (-b.z * 140 - b.vz * 6) * dt;
+      b.x += b.vx * dt; b.z += b.vz * dt;
+      this.beret.rotation.set(clamp(b.x, -0.5, 0.5), 0, clamp(b.z, -0.6, 0.6));
+    }
+    // Moss: googly pupils that dart around and rattle when landing
+    if (this.pupils.length) {
+      const e = this.eye;
+      e.t -= dt;
+      if (e.t <= 0) { e.t = rand(0.4, 1.4); e.tx = rand(-0.55, 0.55); e.ty = rand(-0.3, 0.35); }
+      e.vx += ((e.tx - e.x) * 260 - e.vx * 13) * dt; e.vy += ((e.ty - e.y) * 260 - e.vy * 13) * dt;
+      e.x += e.vx * dt; e.y += e.vy * dt;
+      for (const p of this.pupils) p.rotation.set(clamp(-e.y, -0.6, 0.6), clamp(e.x, -0.8, 0.8), 0);
+    }
+    // Sol: eyes pop open when surprised
+    if (this.open.length) {
+      this.surprise = Math.max(0, this.surprise - dt);
+      const o = this.surprise > 0.05;
+      this.open.forEach((e) => (e.visible = o));
+      this.closed.forEach((e) => (e.visible = !o));
+      this.glasses.position.y = this.glasses.userData.base.p.y + (o ? 0.012 : 0) + Math.max(0, -this.sq) * 0.05;
+    }
+    // Rosie: slides the shades down to peek (and wink) every so often
+    if (this.shades) {
+      this.peekT -= dt;
+      if (this.peekT <= 0 && this.peek === 0) { this.peek = 0.001; this.peekT = 1.5; }
+      else if (this.peek > 0 && this.peekT <= 0) { this.peek = 0; this.peekT = rand(7, 14); }
+      this.peekA = damp(this.peekA ?? 0, this.peek > 0 ? 1 : 0, 9, dt);
+      const bp = this.shades.userData.base.p;
+      this.shades.position.set(bp.x, bp.y - 0.075 * this.peekA, bp.z + 0.02 * this.peekA);
+      this.shades.rotation.x = 0.35 * this.peekA;
+      if (this.peekA > 0.6 && this.peekT < 0.9 && this.peekT > 0.55) this.eyes[0].scale.y = 0.1;
+    }
+
+    // speech: one line at a time, held long enough to read
+    if (this.bubbleT > 0) { this.bubbleT -= dt; if (this.bubbleT <= 0) this.bubbleEl.classList.remove('show'); }
+    else if (this.queue.length) {
+      const text = this.queue.shift();
+      const short = [...text].length <= 3;
+      this.bubbleEl.textContent = text;
+      this.bubbleEl.classList.toggle('text', !short);
+      this.bubbleEl.classList.add('show');
+      this.bubbleT = clamp(1.3 + text.length * 0.045, 1.5, 4.2) / Math.max(1, hopBoost() * 0.75);
+      if (!short) this.talkT = 0.5;
+    }
+    const icon = taskIcon(a);
+    if (icon !== this.lastIcon) { this.lastIcon = icon; this.actEl.textContent = icon; }
+
+    // contact shadow shrinks while airborne
+    this.shadow.position.y = 0.012;
+    const sh = 1 - clamp(airY / 0.5, 0, 0.6);
+    this.shadow.material.opacity = sh;
+    this.shadow.scale.x = this.shadowSX * (0.7 + 0.3 * sh);
+
+    // fewer fur shells when far away - the fuzz is sub-pixel there anyway
+    const dist = camera.position.distanceTo(pos);
+    const n = dist < 4 ? FUR.shells : dist < 7 ? 22 : dist < 12 ? 14 : dist < 18 ? 10 : 7;
+    for (const sm of this.shells) sm.count = n;
+    this.u.shellN.value = n;
+  }
+}
+
+// gently keep them out of each other and out of solid things
+function keepApart(dt) {
+  if (mode !== 'land') return;
+  for (const a of agents) {
+    if (a.hop || a.inside) continue;
+    const p = a.root.position;
+    for (const b of agents) {
+      if (a === b || b.inside) continue;
+      const q = b.root.position, d = Math.hypot(p.x - q.x, p.z - q.z), min = (a.rad + b.rad) * 0.85;
+      if (d < min && d > 1e-4) { const k = (min - d) * Math.min(1, 5 * dt); p.x += (p.x - q.x) / d * k; p.z += (p.z - q.z) / d * k; }
+    }
+    for (const o of world.obstacles) {
+      if (o.soft) continue;
+      const d = Math.hypot(p.x - o.x, p.z - o.z), min = o.r + a.rad * 0.5;
+      if (d < min && d > 1e-4) { p.x += (p.x - o.x) / d * (min - d) * Math.min(1, 6 * dt); p.z += (p.z - o.z) / d * (min - d) * Math.min(1, 6 * dt); }
+    }
+  }
+}
+
+for (const name of Object.keys(CFG)) new Agent(name);
+if (!LIVE && !S.savedAt) for (const l of S.feed) byId[l.id]?.say(l.text); // a brand-new world opens with their first words
+world.sync(S);
+function placeForMode() {
+  for (const a of agents) {
+    a.hop = null;
+    if (mode === 'lineup') { const [x, z] = LINEUP[a.name]; a.root.position.set(x, PUCK_TOP, z); a.prev.copy(a.root.position); a.root.rotation.y = a.yawT = 0; }
+    else { a.spotKey = null; a.placeAtTask(); a.root.rotation.y = a.yawT = a.faceYaw(VIEWS.land.pos.x, VIEWS.land.pos.z); }
+  }
+}
+placeForMode();
+
+// ---------- UI ----------
+let focused = null, flyT = 0, flyHome = null, resetting = false;
+const ui = createUI({
+  colors: AGENT_COLORS,
+  dev: DEV && !LIVE,
+  onSelect: (id) => focusAgent(byId[id]),
+  onSpeed: (i) => { if (!DEV) return; speed = i; try { localStorage.setItem('dothome.speed', String(i)); } catch { /* ignore */ } },
+  onReset: () => {
+    if (!DEV || !confirm('Start a brand new world? The current history will be erased.')) return;
+    resetting = true; // don't let the unload handler save the old world back
+    space.clear();
+    location.reload();
+  },
+  onClose: () => unfocus(),
+});
+if (awayNote) ui.toast(awayNote, dayOf(S));
+
+// ---------- meet the dots: one live card per dot ----------
+const TAGLINE = {
+  blue: 'Thinks in blueprints. Would rather build it right than build it twice.',
+  green: 'First off the plot, last one back. Has already counted every rock.',
+  yellow: 'Listens first. Keeps everyone at the same table.',
+  pink: 'Sees a market where everyone else sees a mess.',
+};
+const meetEl = document.getElementById('meetCards');
+const meetDayEl = document.getElementById('meetDay');
+let meetPick = null, meetHTML = '', meetT = 0, meetHeld = false;
+function pickMeet(id) {
+  meetPick = meetPick === id ? null : id;
+  meetT = 0;
+  if (meetPick) byId[id].react();
+}
+function renderMeet(now) {
+  if (mode !== 'lineup' || meetHeld || now - meetT < 1000) return;
+  meetT = now;
+  const dayLine = `DAY ${dayOf(S)} ON THE ISLAND`;
+  if (meetDayEl.textContent !== dayLine) meetDayEl.textContent = dayLine;
+  const html = ['blue', 'green', 'yellow', 'pink'].map((id) => {
+    const a = S.agents[id], I = IDENTITIES[id], role = roleOf(S, a);
+    const j = (S.journal || []).filter((x) => x.id === id).slice(-1)[0];
+    return `<button class="mcard ${meetPick === id ? 'on' : ''}" data-id="${id}" style="--c:${AGENT_COLORS[id]}">
+      <div class="mh"><i></i><div><b>${esc(a.name)}</b><span>Agent ${I.color} · ${I.trait}</span></div>${role ? `<em class="role">${esc(role)}</em>` : ''}</div>
+      <p class="tagline">${TAGLINE[id]}</p>
+      <div class="facts"><span>priority</span><b>${I.priority}</b><span>risk</span><b>${I.riskLabel}</b><span>skills</span><b>${I.skills.join(', ')}</b></div>
+      <div class="now">${esc(describeTask(S, a))}</div>
+      ${j ? `<p class="quote">“${esc(j.text.length > 150 ? j.text.slice(0, 147) + '…' : j.text)}” · day ${j.day}</p>` : ''}
+      <div class="acts"><span data-act="watch">Watch on the island</span><span data-act="journal">Journal</span></div>
+    </button>`;
+  }).join('');
+  if (html !== meetHTML) { meetHTML = html; meetEl.innerHTML = html; }
+}
+meetEl.addEventListener('pointerdown', () => (meetHeld = true));
+addEventListener('pointerup', () => setTimeout(() => (meetHeld = false), 0));
+meetEl.addEventListener('click', (e) => {
+  const card = e.target.closest('.mcard');
+  if (!card) return;
+  const id = card.dataset.id, act = e.target.closest('[data-act]')?.dataset.act;
+  if (act === 'watch') { meetPick = null; setMode('land'); setTimeout(() => focusAgent(byId[id]), 450); return; }
+  if (act === 'journal') { openSpace(`journal/${id}`); return; }
+  pickMeet(id);
+});
+
+// ---------- the Space: the same memory, laid out as pages (#/space/...) ----------
+const spaceView = createSpaceView({
+  colors: AGENT_COLORS,
+  mapData: () => ({
+    outline: Array.from({ length: 96 }, (_, i) => { const a = i / 96 * Math.PI * 2, r = edgeR(a); return [Math.cos(a) * r, Math.sin(a) * r]; }),
+    zones: ZONES,
+    oreFound: S.nodes.oreFound,
+    buildings: S.buildings.filter((b) => b.bp !== 'road').map((b) => {
+      const v = world.buildings.get(b.id);
+      return v && { x: v.x, z: v.z, size: v.size, bp: b.bp, status: b.status, progress: b.progress, owner: b.owner };
+    }).filter(Boolean),
+    trees: world.trees.map((t) => ({ x: t.g.position.x, z: t.g.position.z, alive: (t.target ?? 1) > 0.3 })),
+    agents: agents.map((a) => ({ id: a.id, name: a.name, x: a.root.position.x, z: a.root.position.z, inside: a.inside })),
+  }),
+});
+const openSpace = (path = 'home') => { location.hash = `#/space/${path}`; };
+document.getElementById('openSpace').addEventListener('click', () => openSpace());
+document.getElementById('panel').addEventListener('click', (e) => { if (e.target.closest('.openspace')) openSpace(); });
+function route() {
+  const m = location.hash.match(/^#\/space\/?(.*)$/);
+  if (m) spaceView.open(decodeURIComponent(m[1]) || 'home');
+  else if (spaceView.isOpen) spaceView.close();
+}
+addEventListener('hashchange', route);
+route();
+
+// ---------- the live stream ----------
+let liveClock = null;
+const watchingEl = document.getElementById('watching');
+const showViewers = (n) => { if (LIVE && n) watchingEl.innerHTML = `👀 <b>${n}</b> watching`; };
+function startClock(st) {
+  liveClock = { t0: st.time + (st.acc || 0), at: performance.now(), rate: st.live?.rate ?? RATE, night: st.live?.night ?? 5 };
+  showViewers(st.live?.viewers);
+}
+const mergeById = (old, fresh) => {
+  const m = new Map(old.map((x) => [x.id, x]));
+  for (const x of fresh) m.set(x.id, x);
+  return [...m.values()].sort((a, b) => a.id - b.id);
+};
+function applyFrame(f) {
+  const seen = S.seq || 0;
+  const add = (old, fresh, cap) => old.concat(fresh.filter((x) => (x.n || 0) > seen)).slice(-cap);
+  const next = { ...f };
+  delete next.add;
+  next.history = add(S.history, f.add.history, 800);
+  next.feed = add(S.feed, f.add.feed, 120);
+  next.engineLog = add(S.engineLog, f.add.engineLog, 80);
+  next.economy = { ...f.economy, transactions: add(S.economy.transactions, f.add.transactions, 120) };
+  next.proposals = mergeById(S.proposals, f.proposals);
+  next.disputes = mergeById(S.disputes, f.disputes);
+  next.decisions = mergeById(S.decisions || [], f.decisions || []);
+  next.journal = add(S.journal || [], f.add.journal || [], 400);
+  next.days = add(S.days || [], f.add.days || [], 100000);
+  S = next;
+  startClock(S);
+}
+if (FIREBASE) {
+  const { D, db } = live;
+  const at = (p) => D.ref(db, `world/${p}`);
+  startClock(S);
+  D.onValue(at('core'), (s) => {
+    if (!s.exists()) return;
+    const core = JSON.parse(s.val());
+    if (core.seed !== S.seed) { location.reload(); return; } // the world was restarted
+    S = { ...S, ...core, economy: { ...core.economy, transactions: S.economy.transactions } };
+    startClock(S);
+  });
+  D.onValue(at('agents'), (s) => { if (s.exists()) S = { ...S, agents: Object.fromEntries(Object.entries(s.val()).map(([k, v]) => [k, JSON.parse(v)])) }; });
+  D.onValue(at('lists'), (s) => {
+    if (!s.exists()) return;
+    const w = s.val(), list = (k) => listKeys(w[k]).flatMap((key) => JSON.parse(w[k][key]));
+    S = { ...S, proposals: list('proposals'), disputes: list('disputes'), decisions: list('decisions') };
+  });
+  D.onValue(at('live'), (s) => { if (s.exists()) S = { ...S, live: s.val() }; });
+  const caps = { history: 800, feed: 120, engineLog: 80, transactions: 120, journal: 400, days: 100000 };
+  for (const kind of Object.keys(caps)) { // new log entries stream in one by one
+    const have = kind === 'transactions' ? S.economy.transactions : S[kind] || [];
+    const lastKey = have.length && have[have.length - 1].n ? `n${String(have[have.length - 1].n).padStart(10, '0')}` : '';
+    const q = lastKey ? D.query(at(`logs/${kind}`), D.orderByKey(), D.startAfter(lastKey)) : D.query(at(`logs/${kind}`), D.orderByKey());
+    D.onChildAdded(q, (c) => {
+      const x = JSON.parse(c.val());
+      if (kind === 'transactions') {
+        const list = S.economy.transactions;
+        if (!list.some((y) => y.n === x.n)) S = { ...S, economy: { ...S.economy, transactions: [...list, x].slice(-caps[kind]) } };
+      } else if (!(S[kind] || []).some((y) => y.n === x.n)) S = { ...S, [kind]: [...(S[kind] || []), x].slice(-caps[kind]) };
+    });
+  }
+  const since = `${Date.now() - 3000}`;
+  D.onChildAdded(D.query(at('events'), D.orderByKey(), D.startAt(since)), (c) => {
+    for (const ev of JSON.parse(c.val())) {
+      if (ev.type === 'say') byId[ev.id]?.say(ev.text);
+      else if (ev.type === 'milestone') ui.toast(ev.text, ev.day);
+    }
+  });
+  // if the experiment is paused, or the laptop stops sending heartbeats, say so instead of pretending the world is moving
+  const badge = document.getElementById('liveBadge');
+  const status = () => {
+    const paused = !!S.live?.paused;
+    const down = !paused && Date.now() - (S.live?.now || 0) > 90000;
+    badge.textContent = paused ? 'PAUSED' : down ? 'OFFLINE' : 'LIVE';
+    badge.classList.toggle('off', paused || down);
+    badge.title = paused ? 'The experiment is paused for now. When it resumes, the dots pick up exactly where they left off.'
+      : down ? 'The world server is offline right now. It will catch up the moment it is back.' : '';
+    if (paused || down) liveClock = null;
+    else if (!liveClock) startClock(S);
+  };
+  status();
+  D.onValue(at('live'), status);
+  setInterval(status, 2000);
+} else if (LIVE) {
+  const es = live.es;
+  startClock(S);
+  const badge = document.getElementById('liveBadge');
+  es.addEventListener('snapshot', (e) => { // after a reconnect
+    const st = JSON.parse(e.data);
+    if (st.seed !== S.seed) { location.reload(); return; } // the world was restarted
+    S = st; startClock(S); world.sync(S); placeForMode();
+  });
+  es.addEventListener('frame', (e) => applyFrame(JSON.parse(e.data)));
+  es.addEventListener('events', (e) => {
+    for (const ev of JSON.parse(e.data)) {
+      if (ev.type === 'say') byId[ev.id]?.say(ev.text);
+      else if (ev.type === 'milestone') ui.toast(ev.text, ev.day);
+    }
+  });
+  es.addEventListener('viewers', (e) => showViewers(+e.data));
+  let paused = false;
+  es.addEventListener('paused', () => { paused = true; liveClock = null; badge.textContent = 'PAUSED'; badge.classList.add('off'); });
+  es.onerror = () => { if (!paused) badge.textContent = 'RECONNECTING'; badge.classList.add('off'); };
+  es.onopen = () => { paused = false; badge.textContent = 'LIVE'; badge.classList.remove('off'); };
+}
+
+function focusAgent(a) {
+  if (!a) return;
+  if (mode === 'lineup') { pickMeet(a.id); return; } // on the stage, clicking spotlights instead of flying in
+  focused = a; flyT = 1.4; flyHome = null;
+  a.react();
+  ui.select(a.id);
+}
+function unfocus() {
+  if (!focused) return;
+  focused = null;
+  ui.deselect();
+  flyHome = { t: 0, fromP: camera.position.clone(), fromT: controls.target.clone() };
+}
+addEventListener('keydown', (e) => { if (e.key === 'Escape') unfocus(); });
+
+const ray = new THREE.Raycaster();
+const ptr = new THREE.Vector2();
+let downAt = null;
+function agentAt(e) {
+  ptr.set(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+  ray.setFromCamera(ptr, camera);
+  const hit = ray.intersectObjects(pickables, false).find((h) => { let o = h.object; while (o) { if (!o.visible) return false; o = o.parent; } return true; });
+  return hit ? hit.object.userData.agent : null;
+}
+renderer.domElement.addEventListener('pointerdown', (e) => (downAt = [e.clientX, e.clientY]));
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const a = agentAt(e);
+  if (a) focusAgent(a); else unfocus();
+});
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (e.buttons) return;
+  renderer.domElement.style.cursor = agentAt(e) ? 'pointer' : '';
+});
+
+function applyView(v, snap) {
+  controls.minDistance = v.minDist;
+  controls.maxDistance = Math.max(v.maxDist, v.pos.distanceTo(v.target)); // a phone's home view can sit further out
+  controls.maxPolarAngle = Math.PI * v.maxPolar;
+  if (snap) { camera.position.copy(v.pos); controls.target.copy(v.target); }
+}
+const fadeEl = document.getElementById('fade');
+function setMode(m) {
+  if (m === mode) return;
+  fadeEl.classList.add('on');
+  setTimeout(() => {
+    mode = m;
+    const lineup = m === 'lineup';
+    land.visible = !lineup; studio.visible = lineup; sky.visible = !lineup; stars.visible = !lineup;
+    document.body.classList.toggle('lineup', lineup);
+    scene.background = lineup ? new THREE.Color(STAGE_BG) : null;
+    scene.fog.near = lineup ? 16 : 28; scene.fog.far = lineup ? 40 : 75;
+    if (lineup) {
+      // studio light: a soft warm sky, a key light from the front left that casts gentle shadows
+      scene.fog.color.set(STAGE_BG);
+      scene.environmentIntensity = 0.3;
+      hemi.intensity = 0.55; hemi.color.set('#fff4ea'); hemi.groundColor.set('#d9c3ae');
+      sun.intensity = 1.5; sun.color.set('#fff1e0'); sun.position.set(-3.5, 7, 6);
+      renderer.toneMappingExposure = 0.92;
+    }
+    key.intensity = lineup ? 0.35 : 0;
+    rims.forEach((l) => (l.intensity = 0));
+    bloom.enabled = false;
+    document.querySelectorAll('#modes button').forEach((b) => b.classList.toggle('on', b.dataset.mode === m));
+    unfocus();
+    flyHome = null;
+    meetPick = null; meetT = 0;
+    perf.ceiling = 0; perf.warm = 2; // the other scene may be lighter or heavier: re-probe
+    placeForMode();
+    applyView(VIEWS[m], true);
+    if (lineup) agents.forEach((a, i) => setTimeout(() => a.bounce(1.1), 350 + i * 160));
+    fadeEl.classList.remove('on');
+  }, 300);
+}
+document.querySelectorAll('#modes button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+
+applyView(VIEWS.land, true);
+if (new URLSearchParams(location.search).get('mode') === 'lineup') setMode('lineup');
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  if (viewShift) camera.setViewOffset(innerWidth, innerHeight, 0, viewShift, innerWidth, innerHeight);
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+  labelRenderer.setSize(innerWidth, innerHeight);
+  if (!focused && !flyHome) applyView(VIEWS[mode], true);
+});
+
+// persistence: the Space is saved as the world changes, and when the tab goes away
+let saveT = 0, hiddenAt = 0;
+const persist = () => { if (!resetting && !LIVE) space.save(S); }; // live, the server owns the world
+addEventListener('pagehide', persist);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { persist(); hiddenAt = Date.now(); return; }
+  if (LIVE) { if (hiddenAt) { hiddenAt = 0; world.sync(S); placeForMode(); } return; }
+  // the world kept living while the tab was in the background: catch up (capped at a day)
+  if (!hiddenAt || !SPEEDS[speed]) return;
+  const minutes = Math.min((Date.now() - hiddenAt) / 1000 * RATE * SPEEDS[speed], DAY);
+  hiddenAt = 0;
+  if (minutes < 20) return;
+  E.step(S, minutes);
+  for (const ev of E.drain(S)) if (ev.type === 'history' && ev.e.kind === 'milestone') ui.toast(ev.e.text, ev.e.day);
+  world.sync(S);
+  placeForMode();
+});
+
+// ---------- adaptive quality ----------
+// Fur shells are fill-rate hungry. Start at full quality and only step down (resolution first,
+// then AO) while the frame rate struggles, so strong GPUs keep everything and laptops stay smooth.
+// Add ?hq to the URL to pin full quality.
+const DPR = Math.min(devicePixelRatio, 2);
+const TIERS = [[DPR, true], [Math.min(DPR, 1.5), true], [Math.min(DPR, 1.15), true], [Math.min(DPR, 1), false], [0.8, false], [0.65, false]]
+  .filter((t, i, all) => i === 0 || t[0] !== all[i - 1][0] || t[1] !== all[i - 1][1]);
+const perf = { tier: 0, ceiling: 0, t: 0, dts: [], warm: 2, good: 0, locked: new URLSearchParams(location.search).has('hq') };
+function setTier(i) {
+  perf.tier = i;
+  const [pr, useAO] = TIERS[i];
+  renderer.setPixelRatio(pr);
+  composer.setPixelRatio(pr);
+  composer.setSize(innerWidth, innerHeight);
+  ao.enabled = useAO;
+}
+function watchPerf(realDt) {
+  if (perf.locked) return;
+  perf.t += realDt;
+  // long gaps are the browser throttling a background/unfocused tab, not GPU load - ignore them
+  if (realDt < 0.25) perf.dts.push(realDt);
+  if (perf.t < 1) return;
+  const d = perf.dts.sort((a, b) => a - b);
+  const fps = d.length >= 8 ? 1 / d[d.length >> 1] : 60; // median frame time
+  perf.t = 0; perf.dts = [];
+  if (perf.warm > 0) { perf.warm--; return; } // shaders compiling, textures uploading
+  if (fps < 45 && perf.tier < TIERS.length - 1) {
+    perf.ceiling = perf.tier + 1; // this tier is too heavy here - don't come back to it
+    setTier(perf.tier + 1); perf.good = 0; perf.warm = 1;
+  } else if (fps > 58 && perf.tier > perf.ceiling && ++perf.good >= 3) {
+    setTier(perf.tier - 1); perf.good = 0; perf.warm = 1;
+  }
+}
+// phones and tablets start one step down (they have dense screens and small GPUs) and climb back if they can
+setTier(matchMedia('(pointer: coarse)').matches && !perf.locked ? Math.min(1, TIERS.length - 1) : 0);
+
+// when the panels slide up from the bottom (phones), aim at the strip still showing above them,
+// so whoever was just tapped stays in sight instead of hiding behind the sheet
+const railEl = document.getElementById('rail');
+const COMPACT = matchMedia('(max-width: 900px), (max-height: 500px)'); // same as the CSS that turns the panels into a sheet
+let viewShift = 0;
+function shiftView(dt) {
+  const want = COMPACT.matches && document.body.classList.contains('rail-open') ? railEl.offsetHeight / 2 : 0;
+  const next = Math.abs(want - viewShift) < 0.5 ? want : damp(viewShift, want, 9, dt);
+  if (next === viewShift) return;
+  viewShift = next;
+  if (viewShift) camera.setViewOffset(innerWidth, innerHeight, 0, viewShift, innerWidth, innerHeight);
+  else camera.clearViewOffset();
+}
+
+// on phones the browser's status bar takes the colour of the sky (or of the studio)
+const themeMeta = document.querySelector('meta[name="theme-color"]');
+const themeC = new THREE.Color();
+let themeT = 0;
+function tintBrowser(dt) {
+  if ((themeT -= dt) > 0) return;
+  themeT = 1;
+  const c = mode === 'lineup' ? STAGE_BG : '#' + themeC.copy(skyU.top.value).lerp(skyU.mid.value, 0.3).getHexString();
+  if (themeMeta.content !== c) themeMeta.content = c;
+}
+
+if (DEV) window.society = { get state() { return S; }, E, camera, controls, agents, world, setMode, renderer, composer, ao, bloom, FUR, setTier: (i) => setTier(i) }; // handy from the devtools console
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+const lastTarget = V3().copy(controls.target);
+renderer.setAnimationLoop(() => {
+  const realDt = clock.getDelta();
+  const dt = Math.min(realDt, 1 / 30);
+  const t = clock.elapsedTime;
+  watchPerf(realDt);
+
+  // advance the world (or, live, glide the clock between server frames), then let the view catch up
+  if (LIVE) {
+    if (liveClock) {
+      const el = (performance.now() - liveClock.at) / 1000;
+      S.time = liveClock.t0 + Math.min(el * liveClock.rate * (E.allAsleep(S) ? liveClock.night : 1), TICK - 0.01);
+    }
+  } else if (SPEEDS[speed]) {
+    E.step(S, Math.min(realDt, 0.25) * RATE * SPEEDS[speed] * (E.allAsleep(S) ? 5 : 1));
+    for (const ev of E.drain(S)) {
+      if (ev.type === 'say') byId[ev.id]?.say(ev.text);
+      else if (ev.type === 'history' && ev.e.kind === 'milestone') ui.toast(ev.e.text, ev.e.day);
+    }
+  }
+  world.sync(S);
+  world.update(dt, t);
+  if (mode === 'land') updateSky(S, dt);
+  tintBrowser(realDt);
+  sky.position.copy(camera.position);
+  stars.position.copy(camera.position);
+  saveT += realDt;
+  if (saveT > 10) { saveT = 0; persist(); }
+
+  for (const a of agents) a.update(dt, t);
+  keepApart(dt);
+  clouds.rotation.y += dt * 0.01;
+  ui.update(S, speed, performance.now(), dt);
+
+  if (focused) {
+    // follow the focused agent; glide in on the first second
+    const goal = tmpV.copy(focused.root.position).setY(focused.root.position.y + focused.height * 0.5);
+    controls.target.lerp(goal, 1 - Math.exp(-5 * dt));
+    camera.position.add(tmpV.subVectors(controls.target, lastTarget));
+    if (flyT > 0) {
+      flyT -= dt;
+      const off = tmpV.subVectors(camera.position, controls.target);
+      off.setLength(damp(off.length(), Math.max(controls.minDistance + 0.4, 1.8 + focused.height * 2.4), 3.2, dt));
+      camera.position.copy(controls.target).add(off);
+    }
+  } else if (flyHome) {
+    flyHome.t = Math.min(1, flyHome.t + dt / 1.1);
+    const e = 1 - Math.pow(1 - flyHome.t, 3), v = VIEWS[mode];
+    camera.position.lerpVectors(flyHome.fromP, v.pos, e);
+    controls.target.lerpVectors(flyHome.fromT, v.target, e);
+    if (flyHome.t >= 1) flyHome = null;
+  }
+  if (mode === 'lineup') {
+    // ease the stage towards whoever is in the spotlight (and back to centre)
+    renderMeet(performance.now());
+    const nx = damp(controls.target.x, meetPick ? byId[meetPick].root.position.x * 0.45 : 0, 3, dt);
+    camera.position.x += nx - controls.target.x;
+    controls.target.x = nx;
+  }
+  lastTarget.copy(controls.target);
+  shiftView(dt);
+  controls.update();
+  spaceView.update(S, performance.now());
+  if (!spaceView.isOpen) { // the Space covers the whole screen: no need to draw the island behind it
+    composer.render();
+    labelRenderer.render(scene, camera);
+  }
+});
+</script>
+</body>
+</html>
