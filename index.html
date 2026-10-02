@@ -1203,8 +1203,20 @@ class Agent {
     this.bubbleT = 0;
   }
 
-  // where the simulation says this agent should be, and what it should look at
+  // where the simulation says this agent should be, and what it should look at - never inside something solid:
+  // a spot on the pond's rim or in a rock would be hopped into, nudged out of, and hopped into again forever
   spot() {
+    const sp = this.rawSpot();
+    if (!sp || sp.stay || sp.door) return sp;
+    let { x, z } = sp;
+    for (const o of world.obstacles) {
+      if (o.soft || (o.building && this.sim.task?.target === o.building)) continue;
+      const dx = x - o.x, dz = z - o.z, d = Math.hypot(dx, dz), min = o.r + this.rad * 0.5 + 0.08;
+      if (d < min) { const k = d > 1e-4 ? min / d : 0; x = o.x + (k ? dx * k : min); z = o.z + (k ? dz * k : 0); }
+    }
+    return x === sp.x && z === sp.z ? sp : { ...sp, x, z };
+  }
+  rawSpot() {
     const t = this.sim.task;
     if (!t) return this.lastSpot || null;
     if (t.zone === 'partner' || t.zone === 'patient') {
@@ -1275,7 +1287,8 @@ class Agent {
       if (this.reactT > 0) { this.reactT -= dt; this.faceCamera(); }
       if (sp && !this.hop) {
         const dx = sp.x - pos.x, dz = sp.z - pos.z, d = Math.hypot(dx, dz);
-        if (d > 0.1 && !sp.stay) {
+        // once there, a small nudge (from a neighbour or a rock) isn't a reason to hop back
+        if (d > (this.arrived ? 0.4 : 0.1) && !sp.stay) {
           this.arrived = false;
           this.inside = false;
           const want = Math.atan2(dx, dz);
