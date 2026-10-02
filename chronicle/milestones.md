@@ -6,3 +6,4 @@ The firsts.
 - **Day 1** `08:10` The first fire is lit.
 - **Day 1** `11:10` Moss discovers an ore vein in the western cliffs.
 - **Day 1** `15:10` Moss is injured at the quarry: the settlement's first medical emergency.
+- **Day 1** `15:40` The first disagreement: Moss objects to Nimbus spending shared materials on a food storage.
