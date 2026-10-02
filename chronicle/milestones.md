@@ -9,3 +9,4 @@ The firsts.
 - **Day 1** `15:40` The first disagreement: Moss objects to Nimbus spending shared materials on a food storage.
 - **Day 1** `16:40` Rosie cares for Moss: the first act of medicine.
 - **Day 2** `07:00` Sol begins clearing land for the first farm.
+- **Day 2** `10:30` Food storage is finished. Nothing rots overnight anymore.
