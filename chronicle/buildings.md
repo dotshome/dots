@@ -9,4 +9,4 @@ Everything the dots have built, or started to.
 | the farm | standing since day 2 | day 2 | Sol |
 | the shared house | standing since day 3 | day 3 | Nimbus |
 | the workshop | standing since day 4 | day 4 | Nimbus |
-| the meeting circle | under construction | day 6 | Sol |
+| the meeting circle | standing since day 6 | day 6 | Sol |
