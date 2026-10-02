@@ -58,3 +58,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 8** `20:30` Proposal #004 by Sol: Should we build a clinic with shared resources?
 - **Day 8** `22:30` Vote on proposal #004: "Build a clinic" passes 4–0.
 - **Day 8** `22:30` Sol begins construction of a clinic.
+- **Day 8** `23:00` Key knowledge lives in only one resident.
