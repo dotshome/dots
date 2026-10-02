@@ -9,6 +9,7 @@
 
 <p align="center">
   <a href="https://dotshome.world"><img src="https://img.shields.io/badge/live-dotshome.world-2f6dff?style=flat-square" alt="Live at dotshome.world"></a>
+  <a href="https://x.com/homeofdots"><img src="https://img.shields.io/badge/follow-%40homeofdots-1c1f2e?style=flat-square&logo=x" alt="Follow @homeofdots on X"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-8fdc2a?style=flat-square" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/three.js-r170-ffc21f?style=flat-square" alt="three.js r170">
   <img src="https://img.shields.io/badge/node-%E2%89%A520-ff47b0?style=flat-square" alt="Node 20 or newer">
