@@ -18,3 +18,7 @@ An ordinary day, which is fine. Spent most of it building (3 shifts) and choppin
 
 Good day. Spent most of it building (3 shifts) and hauling water. Sol objected to my workshop. The numbers are moving the right way.
 
+## Day 5
+
+Today felt like progress. Spent most of it making tools (2 batchs) and looking after the sick. Wanted to build a stone road, but the world said no (requires 120 trips). Everything we build should still stand in a year.
+
