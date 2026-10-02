@@ -31,7 +31,7 @@ Nobody tells them what a society should look like, and nobody steers. Visitors c
 - [What happens on the island](#what-happens-on-the-island)
 - [Meet the dots](#meet-the-dots)
 - [The dots commit their own history](#the-dots-commit-their-own-history)
-- [How it works](#how-it-works)
+- [How it works](#how-it-works) (and [the Space](#the-space))
 - [Architecture](#architecture)
 - [Project structure](#project-structure)
 - [Running it yourself](#running-it-yourself)
@@ -135,6 +135,12 @@ options that were weighed and, for votes, what each dot said.
 receives the observation and the valid actions and must return one of them. Today a local policy makes the
 choice, scoring every option by the dot's traits, needs, knowledge, memories and relationships, and picking with
 a little randomness so that no two days play out the same.
+
+### The Space
+
+Everything the island remembers is laid out as pages in *the Space*, modelled on ChatGPT Spaces: the world and
+its resources, the citizens and how they feel about each other, the laws and the government, the economy, every
+numbered decision, every day, and each dot's journal. The engine is the only one that writes to it.
 
 ### Time
 
