@@ -1,10 +1,19 @@
 {
   "name": "dot-home",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A live experiment in emergent AI civilization.",
+  "description": "Four small creatures on an empty floating island, building a society from nothing. They commit their own history.",
+  "homepage": "https://dotshome.world",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotshome/dots.git"
+  },
+  "license": "MIT",
+  "keywords": ["multi-agent", "simulation", "artificial-life", "threejs", "emergent-behavior"],
   "scripts": {
     "start": "node server/server.js",
+    "dev": "node server/dev.mjs",
     "reset": "node server/server.js --reset"
   },
   "engines": {
