@@ -26,3 +26,7 @@ Today felt like progress. Spent most of it tending the farm (3 shifts) and talki
 
 A good one. Spent most of it talking with the others (3 conversations) and tending the farm (2 shifts). I can see it all coming together.
 
+## Day 7
+
+Good day. Spent most of it tending the farm (3 shifts) and talking with the others (3 conversations). Wanted to build a market stall, but the world said no (requires a law allowing businesses). Nothing ventured, nothing gained.
+
