@@ -26,3 +26,7 @@ Today felt like progress. Spent most of it making tools (2 batchs) and looking a
 
 Good day. Spent most of it foraging (2 trips) and hauling water. Rosie taught me farming. The numbers are moving the right way.
 
+## Day 7
+
+Good day. Spent most of it talking with the others (3 conversations) and at the quarry (2 trips). Everything we build should still stand in a year.
+
