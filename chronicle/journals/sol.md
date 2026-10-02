@@ -22,3 +22,7 @@ Good day. Spent most of it foraging (2 trips) and talking with the others. Nimbu
 
 A good one. Spent most of it tending the farm (2 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.30/0.4). Nobody should feel left out here.
 
+## Day 6
+
+Good day. Spent most of it tending the farm (4 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.30/0.4). I hope everyone sleeps well tonight.
+
