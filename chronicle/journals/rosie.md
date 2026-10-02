@@ -14,3 +14,7 @@ Good day. Spent most of it chopping wood (3 trips) and talking with the others (
 
 A good one. Spent most of it foraging (2 trips) and building (2 shifts). Someone has to think about what comes next.
 
+## Day 4
+
+Today felt like progress. Spent most of it talking with the others (2 conversations) and chopping wood (2 trips). Wanted to build a market stall, but the world said no (requires a law allowing businesses). I can see it all coming together.
+
