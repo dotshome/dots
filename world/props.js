@@ -115,7 +115,9 @@ const BUILDERS = {
   },
   farm(g, ctx) {
     const rows = 5, cols = 7;
-    for (let r = 0; r < rows; r++) put(g, rbox(2.8, 0.08, 0.34, 0.04), M('#8a5a3c', { roughness: 0.95 }), 0, 0.04, -0.9 + r * 0.45, false);
+    // a farm is flat, so it can't rise out of the ground like a house: it is ploughed row by row instead
+    ctx.rows = [];
+    for (let r = 0; r < rows; r++) ctx.rows.push(put(g, rbox(2.8, 0.08, 0.34, 0.04), M('#8a5a3c', { roughness: 0.95 }), 0, 0.04, -0.9 + r * 0.45, false));
     const crops = new THREE.InstancedMesh(new THREE.SphereGeometry(0.11, 10, 8), new THREE.MeshStandardMaterial({ roughness: 0.7 }), rows * cols);
     const mtx = new THREE.Matrix4();
     for (let r = 0, i = 0; r < rows; r++) for (let c = 0; c < cols; c++, i++) {
@@ -430,6 +432,7 @@ export class World3D {
     if (v.done) site.visible = false;
     if (ctx.flame) { v.flame = ctx.flame; v.light = ctx.light; }
     if (ctx.crops) v.crops = ctx.crops;
+    if (ctx.rows) v.rows = ctx.rows;
     this.buildings.set(b.id, v);
     if (b.bp !== 'road' && b.bp !== 'farm') this.obstacles.push({ x, z, r: size / 2 + 0.05, building: b.id });
     return v;
@@ -547,11 +550,23 @@ export class World3D {
     for (const v of this.buildings.values()) {
       const goal = v.planned ? 0.02 : 0.04 + 0.96 * v.target;
       v.shown += (goal - v.shown) * (1 - Math.exp(-4 * dt));
-      v.body.scale.y = v.shown;
+      // squashing a flat farm would sink its rows into the bumpy ground: plough each row across instead
+      const rise = v.rows ? 1 : v.shown;
+      if (v.rows) {
+        const k = Math.max(0, (v.shown - 0.04) / 0.96) * v.rows.length; // nothing ploughed until work starts
+        v.rows.forEach((row, r) => {
+          const f = Math.min(1, Math.max(0, k - r));
+          row.visible = f > 0.03;
+          row.scale.x = Math.max(0.03, f);
+          row.position.x = -1.4 * (1 - f);
+        });
+        if (v.crops) v.crops.visible = v.done;
+      }
+      v.body.scale.y = rise;
       if (v.pop > 0) {
         v.pop = Math.max(0, v.pop - dt * 1.6);
         const k = Math.sin(v.pop * Math.PI * 3) * v.pop * 0.12;
-        v.body.scale.set(1 + k, v.shown * (1 - k), 1 + k);
+        v.body.scale.set(1 + k, rise * (1 - k), 1 + k);
       }
       if (v.flame) {
         v.flame.scale.set(1 + Math.sin(t * 13) * 0.08, 1 + Math.sin(t * 17 + 1) * 0.15 + this.night * 0.25, 1 + Math.cos(t * 11) * 0.08);
