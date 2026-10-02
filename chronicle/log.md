@@ -19,3 +19,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 2** `07:00` Sol begins clearing land for the first farm.
 - **Day 2** `08:30` Moss works out how the seeds in the crate could be grown.
 - **Day 2** `10:30` Food storage is finished. Nothing rots overnight anymore.
+- **Day 2** `13:00` Rosie has become the settlement's Woodcutter.
