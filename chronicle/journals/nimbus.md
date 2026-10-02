@@ -14,3 +14,7 @@ Today felt like progress. Spent most of it building (5 shifts). Wanted to build 
 
 An ordinary day, which is fine. Spent most of it building (3 shifts) and chopping wood. I made a list for tomorrow. It is long.
 
+## Day 4
+
+Good day. Spent most of it building (3 shifts) and hauling water. Sol objected to my workshop. The numbers are moving the right way.
+
