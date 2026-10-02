@@ -24,3 +24,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 2** `15:00` Nimbus has become the settlement's Builder.
 - **Day 2** `18:30` Moss establishes the first farm.
 - **Day 3** `08:30` Construction begins on the first house.
+- **Day 3** `12:00` Key knowledge lives in only one resident.
