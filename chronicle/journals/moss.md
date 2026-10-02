@@ -10,3 +10,7 @@ Today felt like progress. Spent most of it foraging (2 trips) and at the quarry 
 
 Good day. Spent most of it foraging (3 trips) and talking with the others. The cliffs keep calling.
 
+## Day 3
+
+A good one. Spent most of it tending the farm (4 shifts) and at the quarry. I could not sit still if I tried.
+
