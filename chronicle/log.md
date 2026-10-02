@@ -35,3 +35,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 4** `13:00` Sol has become the settlement's Forager.
 - **Day 4** `15:00` Sol finds a stand of young trees past the ridge.
 - **Day 4** `15:00` Proposal #001 by Sol: Should decisions affecting shared resources require approval from 3 of 4 residents?
+- **Day 4** `16:30` The dots conduct their first vote: "How we decide" passes 4–0.
