@@ -413,6 +413,22 @@ export class World3D {
     const body = new THREE.Group();
     root.add(body);
     if (BUILDERS[b.bp]) BUILDERS[b.bp](body, ctx);
+    // under construction, a building goes up from the ground: each piece (base, walls, door, roof, chimney) grows
+    // up from its own bottom edge once the work reaches it, so the roof goes on last. Squashing the whole thing
+    // instead turned a half-built house into a flat red rug.
+    let pieces = null, height = 0;
+    if (!ctx.rows && b.status !== 'done') {
+      root.updateMatrixWorld(true);
+      pieces = [];
+      for (const m of body.children) {
+        if (!m.isMesh && !m.isGroup) continue; // (lights and the like just stay as they are)
+        const box = new THREE.Box3().setFromObject(m);
+        if (box.isEmpty()) continue;
+        pieces.push({ m, bottom: box.min.y, top: Math.max(box.max.y, box.min.y + 0.001), y0: m.position.y, sy0: m.scale.y });
+        height = Math.max(height, box.max.y);
+      }
+      if (!pieces.length) pieces = null;
+    }
     const size = SIZE[b.bp] || 1.5;
     // construction site: corner stakes and a rope line, plus scaffold poles while it rises
     const site = new THREE.Group();
@@ -428,7 +444,7 @@ export class World3D {
     // things that already existed when the page loaded just stand there; only new progress animates
     const start = b.status === 'done' ? 1 : b.status === 'planned' ? 0.02 : 0.04 + 0.96 * b.progress;
     body.scale.y = start;
-    const v = { b, root, body, site, target: 0, shown: start, done: b.status === 'done', pop: 0, size, x, z, ...ctx };
+    const v = { b, root, body, site, target: 0, shown: start, done: b.status === 'done', pop: 0, size, x, z, pieces, height, ...ctx };
     if (v.done) site.visible = false;
     if (ctx.flame) { v.flame = ctx.flame; v.light = ctx.light; }
     if (ctx.crops) v.crops = ctx.crops;
@@ -441,6 +457,10 @@ export class World3D {
   complete(v) {
     v.done = true;
     v.site.visible = false;
+    if (v.pieces) { // finished: every piece at full size
+      for (const p of v.pieces) { p.m.visible = true; p.m.scale.y = p.sy0; p.m.position.y = p.y0; }
+      v.pieces = null;
+    }
     v.pop = 1;
     this.puff(v.x, v.z, v.size);
   }
@@ -551,7 +571,16 @@ export class World3D {
       const goal = v.planned ? 0.02 : 0.04 + 0.96 * v.target;
       v.shown += (goal - v.shown) * (1 - Math.exp(-4 * dt));
       // squashing a flat farm would sink its rows into the bumpy ground: plough each row across instead
-      const rise = v.rows ? 1 : v.shown;
+      const rise = v.rows || v.pieces ? 1 : v.shown;
+      if (v.pieces) {
+        const h = v.planned ? 0 : v.height * Math.max(0.05, (v.shown - 0.04) / 0.96); // a foundation as soon as work starts
+        for (const p of v.pieces) {
+          const f = Math.min(1, Math.max(0, (h - p.bottom) / (p.top - p.bottom)));
+          p.m.visible = f > 0.002;
+          p.m.scale.y = p.sy0 * Math.max(f, 0.002);
+          p.m.position.y = p.y0 + (p.bottom - p.y0) * (1 - f); // keep its bottom edge on the ground as it grows
+        }
+      }
       if (v.rows) {
         const k = Math.max(0, (v.shown - 0.04) / 0.96) * v.rows.length; // nothing ploughed until work starts
         v.rows.forEach((row, r) => {
