@@ -22,3 +22,7 @@ A good one. Spent most of it building (3 shifts) and talking with the others (2 
 
 A good one. Spent most of it tending the farm (4 shifts) and talking with the others (3 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.05/0.4). Tomorrow I want to see what is past the ridge.
 
+## Day 6
+
+Today felt like progress. Spent most of it tending the farm (4 shifts) and talking with the others (2 conversations). So much left to find.
+
