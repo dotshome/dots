@@ -10,3 +10,7 @@ Good day. Spent most of it chopping wood (3 trips) and building (2 shifts). Moss
 
 Today felt like progress. Spent most of it building (5 shifts). Wanted to build a shared house, but the world said no (insufficient wood: 28/40). The numbers are moving the right way.
 
+## Day 3
+
+An ordinary day, which is fine. Spent most of it building (3 shifts) and chopping wood. I made a list for tomorrow. It is long.
+
