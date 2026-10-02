@@ -16,3 +16,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 1** `16:40` Rosie cares for Moss: the first act of medicine.
 - **Day 1** `16:40` Moss recovers.
 - **Day 2** `06:00` 4 food spoils overnight without storage.
+- **Day 2** `07:00` Sol begins clearing land for the first farm.

@@ -8,3 +8,4 @@ The firsts.
 - **Day 1** `15:10` Moss is injured at the quarry: the settlement's first medical emergency.
 - **Day 1** `15:40` The first disagreement: Moss objects to Nimbus spending shared materials on a food storage.
 - **Day 1** `16:40` Rosie cares for Moss: the first act of medicine.
+- **Day 2** `07:00` Sol begins clearing land for the first farm.
