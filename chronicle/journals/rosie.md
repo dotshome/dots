@@ -30,3 +30,7 @@ A good one. Spent most of it talking with the others (3 conversations) and tendi
 
 Good day. Spent most of it tending the farm (3 shifts) and talking with the others (3 conversations). Wanted to build a market stall, but the world said no (requires a law allowing businesses). Nothing ventured, nothing gained.
 
+## Day 8
+
+Good day. Spent most of it talking with the others (2 conversations) and tending the farm (2 shifts). Got injured at the quarry. Sol took care of me when I was injured. Nothing ventured, nothing gained.
+
