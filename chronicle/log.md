@@ -32,3 +32,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 4** `12:30` Nimbus begins construction of a workshop.
 - **Day 4** `12:30` Sol objects to Nimbus spending shared materials on a workshop.
 - **Day 4** `13:00` There is no agreed way to decide on shared resources.
+- **Day 4** `13:00` Sol has become the settlement's Forager.
