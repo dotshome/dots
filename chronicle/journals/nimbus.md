@@ -30,3 +30,7 @@ Good day. Spent most of it foraging (2 trips) and hauling water. Rosie taught me
 
 Good day. Spent most of it talking with the others (3 conversations) and at the quarry (2 trips). Everything we build should still stand in a year.
 
+## Day 8
+
+Today felt like progress. Spent most of it making tools (3 batchs) and chopping wood (2 trips). Tomorrow: finish what we started.
+
