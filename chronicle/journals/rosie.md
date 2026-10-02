@@ -10,3 +10,7 @@ Today felt like progress. Spent most of it chopping wood (3 trips) and building.
 
 Good day. Spent most of it chopping wood (3 trips) and talking with the others (2 conversations). Growth is a choice.
 
+## Day 3
+
+A good one. Spent most of it foraging (2 trips) and building (2 shifts). Someone has to think about what comes next.
+
