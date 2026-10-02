@@ -49,3 +49,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 5** `17:30` Vote on proposal #002: "Who owns what we gather" fails 2–2.
 - **Day 6** `07:00` Food supply is declining: 37 left.
 - **Day 6** `15:30` Proposal #003 by Sol: Should we build a meeting circle with shared resources?
+- **Day 6** `18:00` Vote on proposal #003: "Build a meeting circle" passes 4–0.
