@@ -14,3 +14,7 @@ Today felt like progress. Spent most of it building (3 shifts) and chopping wood
 
 Today felt like progress. Spent most of it building (2 shifts) and chopping wood (2 trips). I worry about the hungry days.
 
+## Day 4
+
+Good day. Spent most of it foraging (2 trips) and talking with the others. Nimbus spent shared materials on a workshop without asking. I worry about the hungry days.
+
