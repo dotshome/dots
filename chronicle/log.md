@@ -55,3 +55,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 8** `09:30` Moss finds a stand of young trees past the ridge.
 - **Day 8** `18:30` Rosie is injured at the quarry.
 - **Day 8** `20:00` Rosie recovers.
+- **Day 8** `20:30` Proposal #004 by Sol: Should we build a clinic with shared resources?
