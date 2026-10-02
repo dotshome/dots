@@ -22,3 +22,7 @@ Today felt like progress. Spent most of it talking with the others (2 conversati
 
 Today felt like progress. Spent most of it tending the farm (3 shifts) and talking with the others (2 conversations). Nimbus voted against my proposal on "Who owns what we gather". Sol voted against my proposal on "Who owns what we gather". Tomorrow, bigger.
 
+## Day 6
+
+A good one. Spent most of it talking with the others (3 conversations) and tending the farm (2 shifts). I can see it all coming together.
+
