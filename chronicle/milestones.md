@@ -10,3 +10,4 @@ The firsts.
 - **Day 1** `16:40` Rosie cares for Moss: the first act of medicine.
 - **Day 2** `07:00` Sol begins clearing land for the first farm.
 - **Day 2** `10:30` Food storage is finished. Nothing rots overnight anymore.
+- **Day 2** `18:30` Moss establishes the first farm.
