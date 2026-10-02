@@ -9,6 +9,10 @@
 <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
 <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
 <link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js">
+<link rel="preload" href="assets/agents.glb" as="fetch" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -31,7 +35,14 @@
   .labels { position: absolute; inset: 0; pointer-events: none; }
   #fade { position: fixed; inset: 0; background: #0b0b10; opacity: 0; pointer-events: none; transition: opacity .28s; z-index: 20; }
   #fade.on { opacity: 1; }
-  #loading { position: fixed; inset: 0; display: grid; place-items: center; font-weight: 900; font-size: 15px; color: var(--muted); }
+  /* while the island loads: the four of them bouncing, and what's happening */
+  #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; font-weight: 900; font-size: 15px; color: var(--muted); z-index: 3; transition: opacity .35s; }
+  #loading.done { opacity: 0; pointer-events: none; }
+  #loading .ld { display: flex; gap: 10px; }
+  #loading .ld span { width: 16px; height: 16px; border-radius: 50%; background: var(--c); animation: hop 1s ease-in-out infinite; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .12); }
+  #loading .ld span:nth-child(2) { animation-delay: .12s; } #loading .ld span:nth-child(3) { animation-delay: .24s; } #loading .ld span:nth-child(4) { animation-delay: .36s; }
+  @keyframes hop { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-14px); } }
+  #loading p { margin: 0; text-align: center; max-width: 320px; }
   #loading ~ #left, #loading ~ #res { visibility: hidden; } /* no empty cards while the world loads */
   button { font-family: inherit; color: inherit; }
   code, pre { font-family: 'JetBrains Mono', ui-monospace, monospace; }
@@ -443,7 +454,7 @@
 </head>
 <body>
 <div id="app"></div>
-<div id="loading">waking everyone up…</div>
+<div id="loading"><div class="ld"><span style="--c:#2f6dff"></span><span style="--c:#8fdc2a"></span><span style="--c:#ffc21f"></span><span style="--c:#ff47b0"></span></div><p id="loadingText">Finding the island…</p></div>
 
 <header id="top" class="card">
   <div class="brand"><img class="logo" src="assets/icon-96.png" alt="" width="34" height="34"><div class="bt"><b>dot.home</b><span class="live" id="liveBadge">LIVE</span></div></div>
@@ -997,6 +1008,12 @@ function connectLive() {
 // the laptop writes it there and this page reads it, so nobody ever connects to the laptop itself.
 const FB_VERSION = '11.0.2';
 const ON_LAPTOP = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+const loadingText = (t) => { const el = document.getElementById('loadingText'); if (el) el.textContent = t; };
+// The four of them are modelled in Blender (Draco-compressed, ~300 KB). Start downloading them, and the
+// decoder, right now - alongside connecting to the world instead of after it.
+const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
+draco.preload();
+const agentsGLB = new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/agents.glb');
 let fbConfig = null;
 if (!ON_LAPTOP) try { fbConfig = (await import('./firebase-config.js')).default; } catch { /* not deployed with Firebase */ }
 const listKeys = (o) => Object.keys(o || {}).sort();
@@ -1021,13 +1038,14 @@ async function connectFirebase(cfg) {
   const db = D.getDatabase(initializeApp(cfg));
   const snap = await D.get(D.ref(db, 'world'));
   if (!snap.exists() || !snap.val().core) { // the server has never published yet: wait for it
-    document.getElementById('loading').textContent = 'The world has not started yet. This page will open when it does.';
+    loadingText('The world has not started yet. This page will open when it does.');
     D.onValue(D.ref(db, 'world/core'), (s) => { if (s.exists()) location.reload(); });
     await new Promise(() => {});
   }
   return { kind: 'firebase', D, db, state: assembleWorld(snap.val()) };
 }
 const live = fbConfig ? await connectFirebase(fbConfig) : await connectLive();
+loadingText('Waking everyone up…');
 const LIVE = !!live;
 const FIREBASE = live?.kind === 'firebase';
 document.getElementById('liveBadge').textContent = LIVE ? 'LIVE' : 'PREVIEW';
@@ -1055,11 +1073,8 @@ if (!LIVE && S.savedAt) { // catch up on what happened while nobody was watching
 }
 E.drain(S);
 
-// ---------- the agents (modelled in Blender: blender/build_agents.py) ----------
-// the model is Draco-compressed (~300 KB instead of ~2 MB); the decoder comes from the same CDN as three.js
-const draco = new DRACOLoader().setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/libs/draco/gltf/');
-const LIB = (await new GLTFLoader().setDRACOLoader(draco).loadAsync('assets/agents.glb')).scene;
-document.getElementById('loading').remove();
+// ---------- the agents (modelled in Blender; the download started at the top) ----------
+const LIB = (await agentsGLB).scene;
 
 const CFG = {
   Nimbus: { id: 'blue', fur: '#2f6dff', hop: { h: 0.16, dur: 0.62, len: 0.42 } },
@@ -1853,9 +1868,18 @@ function tintBrowser(dt) {
 if (DEV) window.society = { get state() { return S; }, E, camera, controls, agents, world, setMode, renderer, composer, ao, bloom, FUR, setTier: (i) => setTier(i) }; // handy from the devtools console
 
 // ---------- loop ----------
+// Prepare every shader in the background first (the fur especially), so the first frame doesn't freeze the
+// page; the loading screen stays until the island is actually on screen. Never wait more than a few seconds.
+await Promise.race([renderer.compileAsync(scene, camera).catch(() => {}), new Promise((r) => setTimeout(r, 4000))]);
+const loadingEl = document.getElementById('loading');
+let firstFrame = true;
 const clock = new THREE.Clock();
 const lastTarget = V3().copy(controls.target);
 renderer.setAnimationLoop(() => {
+  if (firstFrame) { // the island is drawn from this frame on: fade the loading screen away
+    firstFrame = false;
+    requestAnimationFrame(() => { loadingEl.classList.add('done'); setTimeout(() => loadingEl.remove(), 400); });
+  }
   const realDt = clock.getDelta();
   const dt = Math.min(realDt, 1 / 30);
   const t = clock.elapsedTime;
