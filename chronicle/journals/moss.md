@@ -14,3 +14,7 @@ Good day. Spent most of it foraging (3 trips) and talking with the others. The c
 
 A good one. Spent most of it tending the farm (4 shifts) and at the quarry. I could not sit still if I tried.
 
+## Day 4
+
+A good one. Spent most of it building (3 shifts) and talking with the others (2 conversations). Nimbus taught me building. Tomorrow I want to see what is past the ridge.
+
