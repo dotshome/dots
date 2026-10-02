@@ -52,3 +52,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 6** `18:00` Vote on proposal #003: "Build a meeting circle" passes 4–0.
 - **Day 6** `18:00` Sol begins construction of a meeting circle.
 - **Day 6** `22:00` The meeting circle is raised: a place to decide things together.
+- **Day 8** `09:30` Moss finds a stand of young trees past the ridge.
