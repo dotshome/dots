@@ -7,3 +7,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 1** `07:00` Food supply is declining: 26 left.
 - **Day 1** `07:00` Food is spoiling without storage.
 - **Day 1** `08:10` The first fire is lit.
+- **Day 1** `10:10` Sol works out how the seeds in the crate could be grown.
