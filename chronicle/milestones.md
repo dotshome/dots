@@ -16,3 +16,4 @@ The firsts.
 - **Day 4** `10:30` Nimbus teaches Moss building: the first lesson.
 - **Day 4** `11:30` Rosie brings in the first harvest: 11 food.
 - **Day 4** `16:30` The dots conduct their first vote: "How we decide" passes 4–0.
+- **Day 4** `16:30` The first law passes. LAW 001: Decisions affecting shared resources require approval from 3 of 4 residents.
