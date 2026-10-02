@@ -18,3 +18,7 @@ A good one. Spent most of it foraging (2 trips) and building (2 shifts). Someone
 
 Today felt like progress. Spent most of it talking with the others (2 conversations) and chopping wood (2 trips). Wanted to build a market stall, but the world said no (requires a law allowing businesses). I can see it all coming together.
 
+## Day 5
+
+Today felt like progress. Spent most of it tending the farm (3 shifts) and talking with the others (2 conversations). Nimbus voted against my proposal on "Who owns what we gather". Sol voted against my proposal on "Who owns what we gather". Tomorrow, bigger.
+
