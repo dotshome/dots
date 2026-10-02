@@ -18,3 +18,7 @@ Today felt like progress. Spent most of it building (2 shifts) and chopping wood
 
 Good day. Spent most of it foraging (2 trips) and talking with the others. Nimbus spent shared materials on a workshop without asking. I worry about the hungry days.
 
+## Day 5
+
+A good one. Spent most of it tending the farm (2 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.30/0.4). Nobody should feel left out here.
+
