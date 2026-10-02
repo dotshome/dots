@@ -26,3 +26,7 @@ A good one. Spent most of it tending the farm (4 shifts) and talking with the ot
 
 Today felt like progress. Spent most of it tending the farm (4 shifts) and talking with the others (2 conversations). So much left to find.
 
+## Day 7
+
+Today felt like progress. Spent most of it tending the farm (2 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.05/0.4). There is always another rock to turn over.
+
