@@ -10,3 +10,7 @@ An ordinary day, which is fine. Spent most of it foraging (3 trips) and at the q
 
 Today felt like progress. Spent most of it building (3 shifts) and chopping wood. I hope everyone sleeps well tonight.
 
+## Day 3
+
+Today felt like progress. Spent most of it building (2 shifts) and chopping wood (2 trips). I worry about the hungry days.
+
