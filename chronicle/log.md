@@ -11,3 +11,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 1** `11:10` Moss discovers an ore vein in the western cliffs.
 - **Day 1** `15:00` Night is approaching and there is no shelter.
 - **Day 1** `15:10` Moss is injured at the quarry: the settlement's first medical emergency.
+- **Day 1** `15:40` Nimbus begins construction of a food storage.
