@@ -44,3 +44,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 5** `08:00` Rosie recovers.
 - **Day 5** `09:00` Sol has become the settlement's Forager.
 - **Day 5** `12:30` Nimbus crafts the settlement's first tools.
+- **Day 5** `15:30` Proposal #002 by Rosie: Should whoever gathers resources keep half of what they gather?
