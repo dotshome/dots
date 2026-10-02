@@ -42,3 +42,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 5** `06:00` Rosie is sick with a fever.
 - **Day 5** `06:00` Food supply is declining: 35 left.
 - **Day 5** `08:00` Rosie recovers.
+- **Day 5** `09:00` Sol has become the settlement's Forager.
