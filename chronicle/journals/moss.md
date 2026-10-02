@@ -30,3 +30,7 @@ Today felt like progress. Spent most of it tending the farm (4 shifts) and talki
 
 Today felt like progress. Spent most of it tending the farm (2 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.05/0.4). There is always another rock to turn over.
 
+## Day 8
+
+Good day. Spent most of it chopping wood (3 trips) and scouting the edges. Wanted to build a clinic, but the world said no (medicine knowledge 0.05/0.4). The cliffs keep calling.
+
