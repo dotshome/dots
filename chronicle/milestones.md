@@ -11,3 +11,4 @@ The firsts.
 - **Day 2** `07:00` Sol begins clearing land for the first farm.
 - **Day 2** `10:30` Food storage is finished. Nothing rots overnight anymore.
 - **Day 2** `18:30` Moss establishes the first farm.
+- **Day 3** `08:30` Construction begins on the first house.
