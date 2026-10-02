@@ -18,3 +18,4 @@ The firsts.
 - **Day 4** `16:30` The dots conduct their first vote: "How we decide" passes 4–0.
 - **Day 4** `16:30` The first law passes. LAW 001: Decisions affecting shared resources require approval from 3 of 4 residents.
 - **Day 4** `20:00` The workshop opens.
+- **Day 5** `06:00` Pests get into the food stores overnight. 23 food is lost.
