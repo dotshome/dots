@@ -21,3 +21,4 @@ The firsts.
 - **Day 5** `06:00` Pests get into the food stores overnight. 23 food is lost.
 - **Day 5** `12:30` Nimbus crafts the settlement's first tools.
 - **Day 6** `22:00` The meeting circle is raised: a place to decide things together.
+- **Day 9** `10:00` The settlement opens its first clinic.
