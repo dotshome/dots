@@ -26,3 +26,7 @@ A good one. Spent most of it tending the farm (2 shifts) and talking with the ot
 
 Good day. Spent most of it tending the farm (4 shifts) and talking with the others (2 conversations). Wanted to build a clinic, but the world said no (medicine knowledge 0.30/0.4). I hope everyone sleeps well tonight.
 
+## Day 7
+
+Today felt like progress. Spent most of it talking with the others (2 conversations) and tending the farm (2 shifts). Wanted to build a clinic, but the world said no (medicine knowledge 0.30/0.4). Nobody should feel left out here.
+
