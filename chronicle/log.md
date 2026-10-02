@@ -40,3 +40,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 4** `20:00` The workshop opens.
 - **Day 5** `06:00` Pests get into the food stores overnight. 23 food is lost.
 - **Day 5** `06:00` Rosie is sick with a fever.
+- **Day 5** `06:00` Food supply is declining: 35 left.
