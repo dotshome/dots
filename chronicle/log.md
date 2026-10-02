@@ -29,3 +29,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 3** `16:30` The first house is finished. Tonight, nobody sleeps outside.
 - **Day 4** `10:30` Nimbus teaches Moss building: the first lesson.
 - **Day 4** `11:30` Rosie brings in the first harvest: 11 food.
+- **Day 4** `12:30` Nimbus begins construction of a workshop.
