@@ -46,3 +46,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 5** `12:30` Nimbus crafts the settlement's first tools.
 - **Day 5** `15:30` Proposal #002 by Rosie: Should whoever gathers resources keep half of what they gather?
 - **Day 5** `17:00` Moss has become the settlement's Farmer.
+- **Day 5** `17:30` Vote on proposal #002: "Who owns what we gather" fails 2–2.
