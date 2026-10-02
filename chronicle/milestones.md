@@ -13,3 +13,4 @@ The firsts.
 - **Day 2** `18:30` Moss establishes the first farm.
 - **Day 3** `08:30` Construction begins on the first house.
 - **Day 3** `16:30` The first house is finished. Tonight, nobody sleeps outside.
+- **Day 4** `10:30` Nimbus teaches Moss building: the first lesson.
