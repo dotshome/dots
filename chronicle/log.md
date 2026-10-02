@@ -8,3 +8,4 @@ Everything worth remembering, in the order it happened. Each line was committed 
 - **Day 1** `07:00` Food is spoiling without storage.
 - **Day 1** `08:10` The first fire is lit.
 - **Day 1** `10:10` Sol works out how the seeds in the crate could be grown.
+- **Day 1** `11:10` Moss discovers an ore vein in the western cliffs.
